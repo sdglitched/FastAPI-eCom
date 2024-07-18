@@ -279,3 +279,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,virtualenv,visualstudiocode
+
+# PostgreSQL containser setup file
+container_setup.sh
+
+# Database credential file
+db_creds.py
