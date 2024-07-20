@@ -281,7 +281,8 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,virtualenv,visualstudiocode
 
 # PostgreSQL containser setup file
-container_setup.sh
+fastapi_ecom/container_setup.sh
 
 # Database credential file
-db_creds.py
+fastapi_ecom/db_creds.py
+
