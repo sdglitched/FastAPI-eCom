@@ -2,9 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-import db_creds as dbc
+from fastapi_ecom import db_creds as dbc
 
-SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{dbc.user}:{dbc.password}@localhost/{dbc.name}"
+SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{dbc.user}:{dbc.password}@localhost:5432/{dbc.name}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={}, future=True

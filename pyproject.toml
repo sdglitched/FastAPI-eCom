@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fastapi-ecom"
+name = "fastapi_ecom"
 version = "0.1.0"
 description = "E-Commerce API for businesses and end users using FastAPI"
 authors = ["Shounak Dey <shounakdey@ymail.com>"]
@@ -12,6 +12,7 @@ fastapi = "^0.111.0"
 uvicorn = "^0.30.1"
 sqlalchemy = "^2.0.31"
 psycopg2-binary = "^2.9.9"
+alembic = "^1.13.2"
 
 
 [build-system]

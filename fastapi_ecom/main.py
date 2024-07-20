@@ -10,3 +10,4 @@ app = FastAPI(
 @app.get("/")
 def root():
     return{"message": "This is an E-Commerce API for businesses and end users using FastAPI."}
+
