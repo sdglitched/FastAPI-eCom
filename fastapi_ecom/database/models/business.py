@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Text, Date, Boolean
-from sqlalchemy.orm import relationship
 
 from fastapi_ecom.database.db_setup import Base
 from fastapi_ecom.database.models.util import UUIDCreatableMixin
@@ -18,6 +17,3 @@ class Business(Base, UUIDCreatableMixin):
     state = Column("state", Text, nullable=False)
     is_verified = Column("is_verified", Boolean, default=False)
     creation_date = Column("creation_date", Date, nullable=False)
-    
-    owner = relationship("Product", back_populates="business")
-

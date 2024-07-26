@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from fastapi_ecom.router import customer
+
 
 app = FastAPI(
         title="FastAPI ECOM",
@@ -11,3 +13,4 @@ app = FastAPI(
 def root():
     return{"message": "This is an E-Commerce API for businesses and end users using FastAPI."}
 
+app.include_router(customer.router)
