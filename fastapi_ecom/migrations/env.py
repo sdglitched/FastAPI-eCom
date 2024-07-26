@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models import business, customer, order, product
+from fastapi_ecom.database.models import business, customer, order, product, order_details
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
