@@ -13,11 +13,12 @@ security = HTTPBasic()
 
 def verify_cust_cred(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     customer = get_customer_by_email(db, credentials.username)
-    print(bcrypt.checkpw(credentials.password.encode('utf-8'), customer.password.decode('utf-8')))
-    if not customer or bcrypt.checkpw(credentials.password.encode('utf-8'), customer.password.decode('utf-8')):
+    print('Encoded http pwd:',credentials.password.encode('utf-8'),'Database encoded pwd:',customer.password.encode('utf-8'))
+    print('Result:',bcrypt.checkpw(credentials.password.encode('utf-8'), customer.password.encode('utf-8')))
+    if not customer and bcrypt.checkpw(credentials.password.encode('utf-8'), customer.password.encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Basic"},
         )
-    return customer.email#credentials.username
+    return customer.email
