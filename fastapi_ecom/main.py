@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from fastapi_ecom.router import customer
+from fastapi_ecom.router import customer, business
 
 
 app = FastAPI(
@@ -14,3 +14,4 @@ def root():
     return{"message": "This is an E-Commerce API for businesses and end users using FastAPI."}
 
 app.include_router(customer.router)
+app.include_router(business.router)
