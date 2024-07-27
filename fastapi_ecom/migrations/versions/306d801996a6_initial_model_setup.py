@@ -1,8 +1,8 @@
 """initial model setup
 
-Revision ID: c9f3749998ac
+Revision ID: 306d801996a6
 Revises: 
-Create Date: 2024-07-20 17:51:14.355891
+Create Date: 2024-07-26 22:01:52.223573
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c9f3749998ac'
+revision: str = '306d801996a6'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -23,7 +23,7 @@ def upgrade() -> None:
     op.create_table('businesses',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('email_address', sa.String(length=100), nullable=False),
-    sa.Column('password', sa.String(length=50), nullable=False),
+    sa.Column('password', sa.String(length=100), nullable=False),
     sa.Column('business_name', sa.String(length=100), nullable=False),
     sa.Column('address_line_1', sa.Text(), nullable=False),
     sa.Column('address_line_2', sa.Text(), nullable=True),
@@ -40,7 +40,7 @@ def upgrade() -> None:
     op.create_table('customers',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('email_address', sa.String(length=100), nullable=False),
-    sa.Column('password', sa.String(length=50), nullable=False),
+    sa.Column('password', sa.String(length=100), nullable=False),
     sa.Column('full_name', sa.String(length=100), nullable=False),
     sa.Column('address_line_1', sa.Text(), nullable=False),
     sa.Column('address_line_2', sa.Text(), nullable=True),
@@ -56,13 +56,13 @@ def upgrade() -> None:
     op.create_index(op.f('ix_customers_id'), 'customers', ['id'], unique=False)
     op.create_table('orders',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('order_id', sa.Text(), nullable=False),
     sa.Column('user_id', sa.Text(), nullable=False),
     sa.Column('order_date', sa.Date(), nullable=False),
     sa.Column('total_price', sa.Float(), nullable=False),
+    sa.Column('uuid', sa.Text(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['customers.uuid'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('order_id')
+    sa.UniqueConstraint('uuid')
     )
     op.create_index(op.f('ix_orders_id'), 'orders', ['id'], unique=False)
     op.create_table('products',
@@ -82,13 +82,15 @@ def upgrade() -> None:
     op.create_index(op.f('ix_products_id'), 'products', ['id'], unique=False)
     op.create_table('order_details',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('order_id', sa.Text(), nullable=False),
     sa.Column('product_id', sa.Text(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('product_price', sa.Float(), nullable=False),
-    sa.ForeignKeyConstraint(['order_id'], ['orders.order_id'], ondelete='CASCADE'),
+    sa.Column('order_id', sa.Text(), nullable=False),
+    sa.Column('uuid', sa.Text(), nullable=False),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.uuid'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['product_id'], ['products.uuid'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('uuid')
     )
     op.create_index(op.f('ix_order_details_id'), 'order_details', ['id'], unique=False)
     # ### end Alembic commands ###
