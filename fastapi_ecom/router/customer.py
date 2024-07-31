@@ -6,7 +6,7 @@ from typing import List
 
 from fastapi_ecom.database.db_setup import get_db
 from fastapi_ecom.database.pydantic_schemas.customer import Customer, CustomerCreate
-from fastapi_ecom.utils.crud.customer import create_customer, get_customers ,get_customer_by_email
+from fastapi_ecom.utils.crud.customer import create_customer, get_customers ,get_customer_by_email, delete_customer
 from fastapi_ecom.utils.auth import verify_cust_cred
 
 
@@ -19,7 +19,7 @@ async def create_new_customer(customer: CustomerCreate, db: Session = Depends(ge
         raise HTTPException(status_code=400, detail="Try a new Email! Email is already registered")
     return create_customer(db=db, customer=customer)
 
-@router.get("/customer/me")#, response_model=Customer)
+@router.get("/customer/me")
 async def read_customer_me(email: str = Depends(verify_cust_cred)):
     return {"email": email}
 
@@ -27,3 +27,11 @@ async def read_customer_me(email: str = Depends(verify_cust_cred)):
 async def read_customers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     customers = get_customers(db, skip=skip, limit=limit)
     return customers
+
+@router.delete("/customer/delete/me")
+async def dlt_customer(db: Session = Depends(get_db), email: str = Depends(verify_cust_cred)):
+    db_customer = get_customer_by_email(db=db, email=email)
+    if db_customer is None:
+        raise HTTPException(status_code=404, detail="Customer not present in database")
+    customer_to_delete = delete_customer(db=db, uuid=db_customer.uuid)
+    return customer_to_delete

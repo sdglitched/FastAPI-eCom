@@ -26,3 +26,12 @@ def get_business(db: Session, skip: int = 0, limit: int = 100):
 
 def get_business_by_email(db: Session, email: str):
     return db.query(Business).filter(Business.email == email).first()
+
+def get_business_by_uuid(db: Session, uuid: str):
+    return db.query(Business).filter(Business.uuid == uuid).first()
+
+def delete_business(db: Session, uuid: str):
+    business_to_delete = get_business_by_uuid(db=db, uuid=uuid)
+    db.delete(business_to_delete)
+    db.commit()
+    return business_to_delete

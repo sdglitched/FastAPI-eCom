@@ -4,11 +4,11 @@ from sqlalchemy.orm import relationship
 from uuid import uuid4
 
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models.util import UUIDCreatableMixin
+from fastapi_ecom.database.models.util import UUIDCreatableMixin, DateCreatableMixin
 from fastapi_ecom.database.models.customer import Customer
 
 
-class Order(Base, UUIDCreatableMixin):
+class Order(Base, UUIDCreatableMixin, DateCreatableMixin):
     __tablename__ = "orders"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
