@@ -28,7 +28,7 @@ def verify_cust_cred(credentials: HTTPBasicCredentials = Depends(security), db: 
             headers={"WWW-Authenticate": "Basic"},
         )
     else:
-        return customer.email
+        return customer
 
 def verify_business_cred(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     business = get_business_by_email(db, credentials.username)
