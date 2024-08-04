@@ -1,37 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from sqlalchemy.orm import Session
 
-from typing import List
-
 from fastapi_ecom.database.db_setup import get_db
-from fastapi_ecom.database.pydantic_schemas.business import Business, BusinessCreate
-from fastapi_ecom.utils.crud.business import create_business, get_business, get_business_by_email, delete_business
+from fastapi_ecom.database.pydantic_schemas.business import BusinessCreate, BusinessUpdate, BusinessInternal, BusinessResult, BusinessManyResult
+from fastapi_ecom.utils.crud.business import create_business, get_businesses, delete_business, modify_business
 from fastapi_ecom.utils.auth import verify_business_cred
 
 
-router = APIRouter()
+router = APIRouter(prefix="/business")
 
-@router.post("/business", response_model=Business, status_code=201)
+@router.post("", response_model=BusinessResult, status_code=201, tags=["business"])
 async def create_new_business(business: BusinessCreate, db: Session = Depends(get_db)):
-    db_business = get_business_by_email(db=db, email=business.email)
-    if db_business:
-        raise HTTPException(status_code=400, detail="Try a new Email! Email is already registered")
-    return create_business(db=db, business=business)
+    new_business = create_business(db=db, business=business)
+    return {
+        "action": "post",
+        "business": new_business
+    }
 
-@router.get("/business/me")
-async def read_business_me(email: str = Depends(verify_business_cred)):
-    return {"email": email}
+@router.get("/me", tags=["business"])
+async def read_business_me(business_auth: BusinessInternal = Depends(verify_business_cred)):
+    return {
+        "action": "get",
+        "email": business_auth.email
+    }
 
-@router.get("/business", response_model=List[Business])
-async def read_businesss(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    businesss = get_business(db, skip=skip, limit=limit)
-    return businesss
+@router.get("", response_model=BusinessManyResult, tags=["business"])
+async def read_businesses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    businesses = get_businesses(db, skip=skip, limit=limit)
+    return {
+        "action": "get",
+        "businesses": businesses
+    }
 
-@router.delete("/business/delete/me")
-async def dlt_business(db: Session = Depends(get_db), email: str = Depends(verify_business_cred)):
-    db_business = get_business_by_email(db=db, email=email)
-    if db_business is None:
-        raise HTTPException(status_code=404, detail="Business not present in database")
-    business_to_delete = delete_business(db=db, uuid=db_business.uuid)
-    return business_to_delete
+@router.delete("/delete/me", response_model=BusinessResult, tags=["business"])
+async def dlt_business(db: Session = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
+    business_to_delete = delete_business(db=db, uuid=business_auth.uuid)
+    return {
+        "action": "delete",
+        "business": business_to_delete
+    }
+
+@router.put("/update/me", response_model=BusinessResult, tags=["business"])
+async def updt_business(business: BusinessUpdate, db: Session = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
+    business_to_update = modify_business(db=db, business=business, uuid=business_auth.uuid)
+    return {
+        "action": "put",
+        "business": business_to_update
+    }

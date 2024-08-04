@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from sqlalchemy.orm import Session
 
 from fastapi_ecom.database.db_setup import get_db
 from fastapi_ecom.database.pydantic_schemas.customer import CustomerCreate, CustomerUpdate, CustomerInternal, CustomerResult, CustomerManyResult
-from fastapi_ecom.utils.crud.customer import create_customer, get_customers ,get_customer_by_email, delete_customer, modify_customer
+from fastapi_ecom.utils.crud.customer import create_customer, get_customers, delete_customer, modify_customer
 from fastapi_ecom.utils.auth import verify_cust_cred
 
 

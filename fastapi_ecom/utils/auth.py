@@ -15,7 +15,6 @@ security = HTTPBasic()
 def verify_cust_cred(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     customer = get_customer_by_email(db, credentials.username)
     if not customer:
-         print("No customer present")
          raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -33,7 +32,6 @@ def verify_cust_cred(credentials: HTTPBasicCredentials = Depends(security), db: 
 def verify_business_cred(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     business = get_business_by_email(db, credentials.username)
     if not business:
-         print("No business present")
          raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -46,4 +44,4 @@ def verify_business_cred(credentials: HTTPBasicCredentials = Depends(security), 
             headers={"WWW-Authenticate": "Basic"},
         )
     else:
-        return business.email
+        return business

@@ -1,6 +1,6 @@
 import bcrypt
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
@@ -24,23 +24,32 @@ def create_customer(db: Session, customer: CustomerCreate):
     try:
         db.flush()
     except IntegrityError as expt:
-        raise HTTPException(status_code=409, detail="Uniqueness constraint failed - Please try again")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Uniqueness constraint failed - Please try again"
+        )
     return CustomerView.from_orm(db_customer).dict()
 
 def get_customers(db: Session, skip: int = 0, limit: int = 100):
     customers = db.query(Customer).offset(skip).limit(limit).all()
-    return [CustomerView.from_orm(cust).dict() for cust in customers]
+    return [CustomerView.from_orm(customer).dict() for customer in customers]
 
 def get_customer_by_email(db: Session, email: str):
     customer_by_email = db.query(Customer).filter(Customer.email == email).first()
     if customer_by_email is None:
-        raise HTTPException(status_code=404, detail="Customer not present in database")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not present in database"
+        )
     return CustomerInternal.from_orm(customer_by_email)
 
 def get_customer_by_uuid(db: Session, uuid: str):
     customer_by_uuid = db.query(Customer).filter(Customer.uuid == uuid).first()
     if customer_by_uuid is None:
-        raise HTTPException(status_code=404, detail="Customer not present in database")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not present in database"
+        )
     return CustomerInternal.from_orm(customer_by_uuid)
 
 def delete_customer(db: Session, uuid: str):
@@ -50,7 +59,10 @@ def delete_customer(db: Session, uuid: str):
     try:
         db.flush()
     except IntegrityError as expt:
-        raise HTTPException(status_code=400, detail="Failed while deleting")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed while deleting"
+        )
     return CustomerView.from_orm(customer_to_delete).dict()
 
 def modify_customer(db: Session, customer: CustomerUpdate, uuid: str):
@@ -67,5 +79,8 @@ def modify_customer(db: Session, customer: CustomerUpdate, uuid: str):
     try:
         db.flush()
     except IntegrityError as expt:
-        raise HTTPException(status_code=400, detail="Failed while updating")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed while updating"
+        )
     return CustomerView.from_orm(customer_to_update).dict()
