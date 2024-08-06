@@ -3,14 +3,16 @@ import bcrypt
 from fastapi import HTTPException, status
 
 from sqlalchemy import delete
-from sqlalchemy.orm import Session
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from fastapi_ecom.database.models.business import Business
 from fastapi_ecom.database.pydantic_schemas.business import BusinessCreate, BusinessUpdate, BusinessView, BusinessInternal
 
 
-def create_business(db: Session, business: BusinessCreate):
+async def create_business(db: AsyncSession, business: BusinessCreate):
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
     db_business = Business(email=business.email,
@@ -22,7 +24,7 @@ def create_business(db: Session, business: BusinessCreate):
                            state=business.state)
     db.add(db_business)
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -30,14 +32,16 @@ def create_business(db: Session, business: BusinessCreate):
         )
     return BusinessView.from_orm(db_business).dict()
 
-def get_businesses(db: Session, skip: int = 0, limit: int = 100):
-    businesses = db.query(Business).offset(skip).limit(limit).all()
-    for business in businesses:
-        print(business)
+async def get_businesses(db: AsyncSession, skip: int = 0, limit: int = 100):
+    query = select(Business).options(selectinload("*"))
+    result = await db.execute(query)
+    businesses = result.scalars().all()
     return [BusinessView.from_orm(business).dict() for business in businesses]
 
-def get_business_by_email(db: Session, email: str):
-    business_by_email = db.query(Business).filter(Business.email == email).first()
+async def get_business_by_email(db: AsyncSession, email: str):
+    query = select(Business).where(Business.email == email).options(selectinload("*"))
+    result = await db.execute(query)
+    business_by_email = result.scalar_one_or_none()
     if business_by_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -45,8 +49,10 @@ def get_business_by_email(db: Session, email: str):
         )
     return BusinessInternal.from_orm(business_by_email)
 
-def get_business_by_uuid(db: Session, uuid: str):
-    business_by_uuid = db.query(Business).filter(Business.uuid == uuid).first()
+async def get_business_by_uuid(db: AsyncSession, uuid: str):
+    query = select(Business).where(Business.uuid == uuid).options(selectinload("*"))
+    result = await db.execute(query)
+    business_by_uuid = result.scalar_one_or_none()
     if business_by_uuid is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -54,12 +60,12 @@ def get_business_by_uuid(db: Session, uuid: str):
         )
     return BusinessInternal.from_orm(business_by_uuid)
 
-def delete_business(db: Session, uuid: str):
-    business_to_delete = get_business_by_uuid(db=db, uuid=uuid)
+async def delete_business(db: AsyncSession, uuid: str):
+    business_to_delete = await get_business_by_uuid(db=db, uuid=uuid)
     query = delete(Business).filter_by(uuid=uuid)
-    db.execute(query)
+    await db.execute(query)
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -67,8 +73,10 @@ def delete_business(db: Session, uuid: str):
         )
     return BusinessView.from_orm(business_to_delete).dict()
 
-def modify_business(db: Session, business: BusinessUpdate, uuid: str):
-    business_to_update = db.query(Business).filter(Business.uuid == uuid).first()
+async def modify_business(db: AsyncSession, business: BusinessUpdate, uuid: str):
+    query = select(Business).where(Business.uuid == uuid).options(selectinload("*"))
+    result = await db.execute(query)
+    business_to_update = result.scalar_one_or_none()
     business_to_update.email = business.email
     business_to_update.name = business.name
     business_to_update.addr_line_1 = business.addr_line_1
@@ -79,10 +87,10 @@ def modify_business(db: Session, business: BusinessUpdate, uuid: str):
     hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
     business_to_update.password = hashed_password.decode('utf-8')
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed while updating"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Uniqueness constraint failed - Please try again"
         )
     return BusinessView.from_orm(business_to_update).dict()

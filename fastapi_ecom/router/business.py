@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.database.db_setup import get_db
 from fastapi_ecom.database.pydantic_schemas.business import BusinessCreate, BusinessUpdate, BusinessInternal, BusinessResult, BusinessManyResult
@@ -11,8 +11,8 @@ from fastapi_ecom.utils.auth import verify_business_cred
 router = APIRouter(prefix="/business")
 
 @router.post("", response_model=BusinessResult, status_code=201, tags=["business"])
-async def create_new_business(business: BusinessCreate, db: Session = Depends(get_db)):
-    new_business = create_business(db=db, business=business)
+async def create_new_business(business: BusinessCreate, db: AsyncSession = Depends(get_db)):
+    new_business = await create_business(db=db, business=business)
     return {
         "action": "post",
         "business": new_business
@@ -26,24 +26,24 @@ async def read_business_me(business_auth: BusinessInternal = Depends(verify_busi
     }
 
 @router.get("", response_model=BusinessManyResult, tags=["business"])
-async def read_businesses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    businesses = get_businesses(db, skip=skip, limit=limit)
+async def read_businesses(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    businesses = await get_businesses(db, skip=skip, limit=limit)
     return {
         "action": "get",
         "businesses": businesses
     }
 
 @router.delete("/delete/me", response_model=BusinessResult, tags=["business"])
-async def dlt_business(db: Session = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    business_to_delete = delete_business(db=db, uuid=business_auth.uuid)
+async def dlt_business(db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
+    business_to_delete = await delete_business(db=db, uuid=business_auth.uuid)
     return {
         "action": "delete",
         "business": business_to_delete
     }
 
 @router.put("/update/me", response_model=BusinessResult, tags=["business"])
-async def updt_business(business: BusinessUpdate, db: Session = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    business_to_update = modify_business(db=db, business=business, uuid=business_auth.uuid)
+async def updt_business(business: BusinessUpdate, db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
+    business_to_update = await modify_business(db=db, business=business, uuid=business_auth.uuid)
     return {
         "action": "put",
         "business": business_to_update
