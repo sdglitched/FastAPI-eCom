@@ -3,14 +3,16 @@ import bcrypt
 from fastapi import HTTPException, status
 
 from sqlalchemy import delete
-from sqlalchemy.orm import Session
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from fastapi_ecom.database.models.customer import Customer
 from fastapi_ecom.database.pydantic_schemas.customer import CustomerCreate, CustomerUpdate, CustomerView, CustomerInternal
 
 
-def create_customer(db: Session, customer: CustomerCreate):
+async def create_customer(db: AsyncSession, customer: CustomerCreate):
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
     db_customer = Customer(email=customer.email,
@@ -22,7 +24,7 @@ def create_customer(db: Session, customer: CustomerCreate):
                            state=customer.state)
     db.add(db_customer)
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -30,12 +32,16 @@ def create_customer(db: Session, customer: CustomerCreate):
         )
     return CustomerView.from_orm(db_customer).dict()
 
-def get_customers(db: Session, skip: int = 0, limit: int = 100):
-    customers = db.query(Customer).offset(skip).limit(limit).all()
+async def get_customers(db: AsyncSession, skip: int = 0, limit: int = 100):
+    query = select(Customer).options(selectinload("*"))
+    result = await db.execute(query)
+    customers = result.scalars().all()
     return [CustomerView.from_orm(customer).dict() for customer in customers]
 
-def get_customer_by_email(db: Session, email: str):
-    customer_by_email = db.query(Customer).filter(Customer.email == email).first()
+async def get_customer_by_email(db: AsyncSession, email: str):
+    query = select(Customer).where(Customer.email == email).options(selectinload("*"))
+    result = await db.execute(query)
+    customer_by_email = result.scalar_one_or_none()
     if customer_by_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -43,8 +49,10 @@ def get_customer_by_email(db: Session, email: str):
         )
     return CustomerInternal.from_orm(customer_by_email)
 
-def get_customer_by_uuid(db: Session, uuid: str):
-    customer_by_uuid = db.query(Customer).filter(Customer.uuid == uuid).first()
+async def get_customer_by_uuid(db: AsyncSession, uuid: str):
+    query = select(Customer).where(Customer.uuid == uuid).options(selectinload("*"))
+    result = await db.execute(query)
+    customer_by_uuid = result.scalar_one_or_none()
     if customer_by_uuid is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -52,12 +60,12 @@ def get_customer_by_uuid(db: Session, uuid: str):
         )
     return CustomerInternal.from_orm(customer_by_uuid)
 
-def delete_customer(db: Session, uuid: str):
-    customer_to_delete = get_customer_by_uuid(db=db, uuid=uuid)
+async def delete_customer(db: AsyncSession, uuid: str):
+    customer_to_delete = await get_customer_by_uuid(db=db, uuid=uuid)
     query = delete(Customer).filter_by(uuid=uuid)
-    db.execute(query)
+    await db.execute(query)
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -65,8 +73,10 @@ def delete_customer(db: Session, uuid: str):
         )
     return CustomerView.from_orm(customer_to_delete).dict()
 
-def modify_customer(db: Session, customer: CustomerUpdate, uuid: str):
-    customer_to_update = db.query(Customer).filter(Customer.uuid == uuid).first()
+async def modify_customer(db: AsyncSession, customer: CustomerUpdate, uuid: str):
+    query = select(Customer).where(Customer.uuid == uuid).options(selectinload("*"))
+    result = await db.execute(query)
+    customer_to_update = result.scalar_one_or_none()
     customer_to_update.email = customer.email
     customer_to_update.name = customer.name
     customer_to_update.addr_line_1 = customer.addr_line_1
@@ -77,10 +87,10 @@ def modify_customer(db: Session, customer: CustomerUpdate, uuid: str):
     hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
     customer_to_update.password = hashed_password.decode('utf-8')
     try:
-        db.flush()
+        await db.flush()
     except IntegrityError as expt:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed while updating"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Uniqueness constraint failed - Please try again"
         )
     return CustomerView.from_orm(customer_to_update).dict()
