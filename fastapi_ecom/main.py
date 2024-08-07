@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from fastapi_ecom.router import customer, business
+from fastapi_ecom.router import customer, business, product
 
 
 tags_metadata = [
     {"name": "customer", "description": "Operations on customeres"},
     {"name": "business", "description": "Operations on businesses"},
+    {"name": "product", "description": "Operations on products"},
 ]
 
 app = FastAPI(
@@ -23,3 +24,4 @@ def root():
 
 app.include_router(customer.router, prefix=PREFIX)
 app.include_router(business.router, prefix=PREFIX)
+app.include_router(product.router, prefix=PREFIX)
