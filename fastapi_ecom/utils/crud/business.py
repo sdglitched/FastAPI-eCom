@@ -1,5 +1,7 @@
 import bcrypt
 
+from uuid import uuid4
+
 from fastapi import HTTPException, status
 
 from sqlalchemy import delete
@@ -21,7 +23,8 @@ async def create_business(db: AsyncSession, business: BusinessCreate):
                            addr_line_1=business.addr_line_1,
                            addr_line_2=business.addr_line_2,
                            city=business.city,
-                           state=business.state)
+                           state=business.state,
+                           uuid=uuid4().hex[0:8])
     db.add(db_business)
     try:
         await db.flush()
@@ -77,15 +80,22 @@ async def modify_business(db: AsyncSession, business: BusinessUpdate, uuid: str)
     query = select(Business).where(Business.uuid == uuid).options(selectinload("*"))
     result = await db.execute(query)
     business_to_update = result.scalar_one_or_none()
-    business_to_update.email = business.email
-    business_to_update.name = business.name
-    business_to_update.addr_line_1 = business.addr_line_1
-    business_to_update.addr_line_2 = business.addr_line_2
-    business_to_update.city = business.city
-    business_to_update.state = business.state
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
-    business_to_update.password = hashed_password.decode('utf-8')
+    if business.email != "":
+        business_to_update.email = business.email
+    if business.name != "":
+        business_to_update.name = business.name
+    if business.addr_line_1 != "":
+        business_to_update.addr_line_1 = business.addr_line_1
+    if business.addr_line_2 != "":
+        business_to_update.addr_line_2 = business.addr_line_2
+    if business.city != "":
+        business_to_update.city = business.city
+    if business.state != "":
+        business_to_update.state = business.state
+    if business.password != "":
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
+        business_to_update.password = hashed_password.decode('utf-8')
     try:
         await db.flush()
     except IntegrityError as expt:
