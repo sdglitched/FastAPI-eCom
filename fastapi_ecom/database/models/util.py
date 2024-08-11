@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Text, DateTime, func
-
 from uuid import uuid4
+from datetime import datetime, UTC
+from functools import partial
+
+from sqlalchemy import Column, Text
+from sqlalchemy.types import TIMESTAMP
 
 
 class UUIDCreatableMixin:
@@ -10,9 +13,10 @@ class UUIDCreatableMixin:
 
     uuid = Column("uuid", Text, unique=True, nullable=False, default=uuid4().hex[0:8])
 
+
 class DateCreatableMixin:
     """
     An SQLAlchemy mixin to automatically generate a creation date
     """
 
-    creation_date = Column(DateTime, default=func.now(), nullable=False)
+    creation_date = Column("creation_date", TIMESTAMP(timezone=True), nullable=False, default=partial(datetime.now, tz=UTC))
