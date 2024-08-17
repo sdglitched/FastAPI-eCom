@@ -286,3 +286,5 @@ fastapi_ecom/container_setup.sh
 # Database credential file
 fastapi_ecom/db_creds.py
 
+#PyCharm .idea folder
+.idea
