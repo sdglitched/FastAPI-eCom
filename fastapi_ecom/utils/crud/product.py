@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException, status
 
-from sqlalchemy import delete, and_
+from sqlalchemy import delete, or_, and_
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,6 +33,17 @@ async def add_product(db: AsyncSession, product: ProductCreate, business_id: str
 
 async def get_all_products(db: AsyncSession):
     query = select(Product).options(selectinload("*"))
+    result = await db.execute(query)
+    products = result.scalars().all()
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No product in database"
+        )
+    return [ProductView.model_validate(product).model_dump() for product in products]
+
+async def get_product_by_text(db: AsyncSession, text: str):
+    query = select(Product).where(or_(Product.name.ilike(f"%{text}%".lower()), Product.description.like(f"%{text}%".lower()))).options(selectinload("*"))
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
