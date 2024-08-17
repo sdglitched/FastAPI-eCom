@@ -1,6 +1,6 @@
 from abc import ABC
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -29,11 +29,17 @@ class CustomerCreate(CustomerView):
     password: str
 
 
-class CustomerUpdate(CustomerCreate):
-    pass
+class CustomerUpdate(BaseModel):
+    email: Optional[str] = ""
+    name: Optional[str] = ""
+    addr_line_1: Optional[str] = ""
+    addr_line_2: Optional[str] = ""
+    city: Optional[str] = ""
+    state: Optional[str] = ""
+    password: Optional[str] = ""
 
 
-class CustomerInternal(CustomerUpdate):
+class CustomerInternal(CustomerCreate):
     id: int
     uuid: str
     is_verified: bool = False

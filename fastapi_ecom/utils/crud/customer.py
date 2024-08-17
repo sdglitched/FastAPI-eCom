@@ -1,5 +1,7 @@
 import bcrypt
 
+from uuid import uuid4
+
 from fastapi import HTTPException, status
 
 from sqlalchemy import delete
@@ -21,7 +23,8 @@ async def create_customer(db: AsyncSession, customer: CustomerCreate):
                            addr_line_1=customer.addr_line_1,
                            addr_line_2=customer.addr_line_2,
                            city=customer.city,
-                           state=customer.state)
+                           state=customer.state,
+                           uuid=uuid4().hex[0:8])
     db.add(db_customer)
     try:
         await db.flush()
@@ -30,13 +33,13 @@ async def create_customer(db: AsyncSession, customer: CustomerCreate):
             status_code=status.HTTP_409_CONFLICT,
             detail="Uniqueness constraint failed - Please try again"
         )
-    return CustomerView.from_orm(db_customer).dict()
+    return CustomerView.model_validate(db_customer).model_dump()
 
 async def get_customers(db: AsyncSession, skip: int = 0, limit: int = 100):
     query = select(Customer).options(selectinload("*"))
     result = await db.execute(query)
     customers = result.scalars().all()
-    return [CustomerView.from_orm(customer).dict() for customer in customers]
+    return [CustomerView.model_validate(customer).model_dump() for customer in customers]
 
 async def get_customer_by_email(db: AsyncSession, email: str):
     query = select(Customer).where(Customer.email == email).options(selectinload("*"))
@@ -47,7 +50,7 @@ async def get_customer_by_email(db: AsyncSession, email: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer not present in database"
         )
-    return CustomerInternal.from_orm(customer_by_email)
+    return CustomerInternal.model_validate(customer_by_email)
 
 async def get_customer_by_uuid(db: AsyncSession, uuid: str):
     query = select(Customer).where(Customer.uuid == uuid).options(selectinload("*"))
@@ -58,7 +61,7 @@ async def get_customer_by_uuid(db: AsyncSession, uuid: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer not present in database"
         )
-    return CustomerInternal.from_orm(customer_by_uuid)
+    return CustomerInternal.model_validate(customer_by_uuid)
 
 async def delete_customer(db: AsyncSession, uuid: str):
     customer_to_delete = await get_customer_by_uuid(db=db, uuid=uuid)
@@ -71,21 +74,28 @@ async def delete_customer(db: AsyncSession, uuid: str):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while deleting"
         )
-    return CustomerView.from_orm(customer_to_delete).dict()
+    return CustomerView.model_validate(customer_to_delete).model_dump()
 
 async def modify_customer(db: AsyncSession, customer: CustomerUpdate, uuid: str):
     query = select(Customer).where(Customer.uuid == uuid).options(selectinload("*"))
     result = await db.execute(query)
     customer_to_update = result.scalar_one_or_none()
-    customer_to_update.email = customer.email
-    customer_to_update.name = customer.name
-    customer_to_update.addr_line_1 = customer.addr_line_1
-    customer_to_update.addr_line_2 = customer.addr_line_2
-    customer_to_update.city = customer.city
-    customer_to_update.state = customer.state
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
-    customer_to_update.password = hashed_password.decode('utf-8')
+    if customer.email != "":
+        customer_to_update.email = customer.email
+    if customer.name != "":
+        customer_to_update.name = customer.name
+    if customer.addr_line_1 != "":
+        customer_to_update.addr_line_1 = customer.addr_line_1
+    if customer.addr_line_2 != "":
+        customer_to_update.addr_line_2 = customer.addr_line_2
+    if customer.city != "":
+        customer_to_update.city = customer.city
+    if customer.state != "":
+        customer_to_update.state = customer.state
+    if customer.password != "":
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
+        customer_to_update.password = hashed_password.decode('utf-8')
     try:
         await db.flush()
     except IntegrityError as expt:
@@ -93,4 +103,4 @@ async def modify_customer(db: AsyncSession, customer: CustomerUpdate, uuid: str)
             status_code=status.HTTP_409_CONFLICT,
             detail="Uniqueness constraint failed - Please try again"
         )
-    return CustomerView.from_orm(customer_to_update).dict()
+    return CustomerView.model_validate(customer_to_update).model_dump()
