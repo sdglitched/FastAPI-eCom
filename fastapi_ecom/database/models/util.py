@@ -20,3 +20,11 @@ class DateCreatableMixin:
     """
 
     creation_date = Column("creation_date", TIMESTAMP(timezone=True), nullable=False, default=partial(datetime.now, tz=UTC))
+
+
+class DateUpdateableMixin:
+    """
+    An SQLAlchemy mixin to automatically generate an update date
+    """
+
+    update_date = Column("update_date", TIMESTAMP(timezone=True), nullable=False, default=partial(datetime.now, tz=UTC))

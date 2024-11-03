@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import HTTPException, status
@@ -13,13 +14,13 @@ from fastapi_ecom.database.pydantic_schemas.product import ProductCreate, Produc
 
 
 async def add_product(db: AsyncSession, product: ProductCreate, business_id: str):
-    db_product = Product(name = product.name,
-                         description = product.description,
-                         category = product.category,
+    db_product = Product(name = product.name.strip(),
+                         description = product.description.strip(),
+                         category = product.category.strip(),
                          mfg_date = product.mfg_date,
                          exp_date = product.exp_date,
                          price = product.price,
-                         business_id = business_id,
+                         business_id = business_id.strip(),
                          uuid=uuid4().hex[0:8])
     db.add(db_product)
     try:
@@ -97,23 +98,32 @@ async def modify_product(db: AsyncSession, product: ProductUpdate, uuid: str, bu
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
         )
+    is_updated = False
     if product.name != "":
         product_to_update.name = product.name
+        is_updated = True
     if product.description != "":
         product_to_update.description = product.description
+        is_updated = True
     if product.category != "":
         product_to_update.category = product.category
+        is_updated = True
     if str(product.mfg_date) != "1900-01-01 00:00:00+00:00":
         product_to_update.mfg_date = product.mfg_date
+        is_updated = True
     if str(product.exp_date) != "1900-01-01 00:00:00+00:00":
         product_to_update.exp_date = product.exp_date
+        is_updated = True
     if product.price != 0.0:
         product_to_update.price = product.price
-    try:
-        await db.flush()
-    except IntegrityError as expt:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed while modifying"
-        )
+        is_updated = True
+    if is_updated:
+        product_to_update.update_date = datetime.now(timezone.utc)
+        try:
+            await db.flush()
+        except IntegrityError as expt:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed while modifying"
+            )
     return ProductViewInternal.model_validate(product_to_update).model_dump()

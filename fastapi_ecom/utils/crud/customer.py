@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import bcrypt
 
 from uuid import uuid4
@@ -16,14 +17,14 @@ from fastapi_ecom.database.pydantic_schemas.customer import CustomerCreate, Cust
 
 async def create_customer(db: AsyncSession, customer: CustomerCreate):
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
-    db_customer = Customer(email=customer.email,
+    hashed_password = bcrypt.hashpw(customer.password.strip().encode('utf-8'), salt)
+    db_customer = Customer(email=customer.email.strip(),
                            password=hashed_password.decode('utf-8'),
-                           name=customer.name,
-                           addr_line_1=customer.addr_line_1,
-                           addr_line_2=customer.addr_line_2,
-                           city=customer.city,
-                           state=customer.state,
+                           name=customer.name.strip(),
+                           addr_line_1=customer.addr_line_1.strip(),
+                           addr_line_2=customer.addr_line_2.strip(),
+                           city=customer.city.strip(),
+                           state=customer.state.strip(),
                            uuid=uuid4().hex[0:8])
     db.add(db_customer)
     try:
@@ -80,27 +81,24 @@ async def modify_customer(db: AsyncSession, customer: CustomerUpdate, uuid: str)
     query = select(Customer).where(Customer.uuid == uuid).options(selectinload("*"))
     result = await db.execute(query)
     customer_to_update = result.scalar_one_or_none()
-    if customer.email != "":
-        customer_to_update.email = customer.email
-    if customer.name != "":
-        customer_to_update.name = customer.name
-    if customer.addr_line_1 != "":
-        customer_to_update.addr_line_1 = customer.addr_line_1
-    if customer.addr_line_2 != "":
-        customer_to_update.addr_line_2 = customer.addr_line_2
-    if customer.city != "":
-        customer_to_update.city = customer.city
-    if customer.state != "":
-        customer_to_update.state = customer.state
+    is_updated = False
+    cus_cols = ["email", "name", "addr_line_1", "addr_line_2", "city", "state"]
+    for item in cus_cols:
+      if getattr(customer, item) != "":
+        setattr(customer_to_update, item, getattr(customer, item).strip())
+        is_updated = True
     if customer.password != "":
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
         customer_to_update.password = hashed_password.decode('utf-8')
-    try:
-        await db.flush()
-    except IntegrityError as expt:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Uniqueness constraint failed - Please try again"
+        is_updated = True
+    if is_updated:
+        customer_to_update.update_date = datetime.now(timezone.utc)
+        try:
+            await db.flush()
+        except IntegrityError as expt:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Uniqueness constraint failed - Please try again"
         )
     return CustomerView.model_validate(customer_to_update).model_dump()
