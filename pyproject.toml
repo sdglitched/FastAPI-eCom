@@ -16,6 +16,12 @@ alembic = "^1.13.2"
 bcrypt = "^4.2.0"
 asyncpg = "^0.29.0"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.7.3"
+
+[tool.ruff]
+line-length = 100
+fix = true
 
 [build-system]
 requires = ["poetry-core"]

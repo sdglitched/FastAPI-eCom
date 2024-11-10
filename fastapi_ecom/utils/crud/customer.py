@@ -29,7 +29,7 @@ async def create_customer(db: AsyncSession, customer: CustomerCreate):
     db.add(db_customer)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Uniqueness constraint failed - Please try again"
@@ -70,7 +70,7 @@ async def delete_customer(db: AsyncSession, uuid: str):
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while deleting"
@@ -96,7 +96,7 @@ async def modify_customer(db: AsyncSession, customer: CustomerUpdate, uuid: str)
         customer_to_update.update_date = datetime.now(timezone.utc)
         try:
             await db.flush()
-        except IntegrityError as expt:
+        except IntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Uniqueness constraint failed - Please try again"
