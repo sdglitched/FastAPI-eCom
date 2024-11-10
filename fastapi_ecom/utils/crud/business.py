@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import bcrypt
 
 from uuid import uuid4
@@ -16,14 +17,14 @@ from fastapi_ecom.database.pydantic_schemas.business import BusinessCreate, Busi
 
 async def create_business(db: AsyncSession, business: BusinessCreate):
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
-    db_business = Business(email=business.email,
+    hashed_password = bcrypt.hashpw(business.password.strip().encode('utf-8'), salt)
+    db_business = Business(email=business.email.strip(),
                            password=hashed_password.decode('utf-8'),
-                           name=business.name,
-                           addr_line_1=business.addr_line_1,
-                           addr_line_2=business.addr_line_2,
-                           city=business.city,
-                           state=business.state,
+                           name=business.name.strip(),
+                           addr_line_1=business.addr_line_1.strip(),
+                           addr_line_2=business.addr_line_2.strip(),
+                           city=business.city.strip(),
+                           state=business.state.strip(),
                            uuid=uuid4().hex[0:8])
     db.add(db_business)
     try:
@@ -80,27 +81,24 @@ async def modify_business(db: AsyncSession, business: BusinessUpdate, uuid: str)
     query = select(Business).where(Business.uuid == uuid).options(selectinload("*"))
     result = await db.execute(query)
     business_to_update = result.scalar_one_or_none()
-    if business.email != "":
-        business_to_update.email = business.email
-    if business.name != "":
-        business_to_update.name = business.name
-    if business.addr_line_1 != "":
-        business_to_update.addr_line_1 = business.addr_line_1
-    if business.addr_line_2 != "":
-        business_to_update.addr_line_2 = business.addr_line_2
-    if business.city != "":
-        business_to_update.city = business.city
-    if business.state != "":
-        business_to_update.state = business.state
+    is_updated = False
+    bus_cols = ["email", "name", "addr_line_1", "addr_line_2", "city", "state"]
+    for item in bus_cols:
+      if getattr(business, item) != "":
+        setattr(business_to_update, item, getattr(business, item).strip())
+        is_updated = True
     if business.password != "":
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(business.password.encode('utf-8'), salt)
         business_to_update.password = hashed_password.decode('utf-8')
-    try:
-        await db.flush()
-    except IntegrityError as expt:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Uniqueness constraint failed - Please try again"
-        )
+        is_updated = True
+    if is_updated:
+        business_to_update.update_date = datetime.now(timezone.utc)
+        try:
+            await db.flush()
+        except IntegrityError as expt:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Uniqueness constraint failed - Please try again"
+            )
     return BusinessView.model_validate(business_to_update).model_dump()

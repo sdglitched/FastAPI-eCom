@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, String, Text, Date, Boolean
+from sqlalchemy import Column, Integer, String, Text, Boolean
+from sqlalchemy.orm import relationship
 
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models.util import UUIDCreatableMixin, DateCreatableMixin
+from fastapi_ecom.database.models.util import DateUpdateableMixin, UUIDCreatableMixin, DateCreatableMixin
 
 
-class Customer(Base, UUIDCreatableMixin, DateCreatableMixin):
+class Customer(Base, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixin):
     __tablename__ = "customers"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
@@ -16,3 +17,5 @@ class Customer(Base, UUIDCreatableMixin, DateCreatableMixin):
     city = Column("city", Text, nullable=False)
     state = Column("state", Text, nullable=False)
     is_verified = Column("is_verified", Boolean, default=False)
+
+    orders = relationship("Order", back_populates="customers")
