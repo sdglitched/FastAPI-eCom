@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import HTTPException, status
@@ -26,7 +25,7 @@ async def create_order(db: AsyncSession, order: OrderCreate, customer_id: str):
     db.add(new_order)
     try:
         await db.flush()  # Generate order ID for relations
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while commiting"
@@ -172,7 +171,7 @@ async def delete_order(db: AsyncSession, uuid: str, customer_id: str):
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while deleting"

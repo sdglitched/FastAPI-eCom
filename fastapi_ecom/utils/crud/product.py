@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from fastapi_ecom.database.models.product import Product
-from fastapi_ecom.database.pydantic_schemas.product import ProductCreate, ProductUpdate, ProductView, ProductViewInternal, ProductInternal
+from fastapi_ecom.database.pydantic_schemas.product import ProductCreate, ProductUpdate, ProductView, ProductViewInternal
 
 
 async def add_product(db: AsyncSession, product: ProductCreate, business_id: str):
@@ -25,7 +25,7 @@ async def add_product(db: AsyncSession, product: ProductCreate, business_id: str
     db.add(db_product)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while commiting"
@@ -82,7 +82,7 @@ async def delete_product(db: AsyncSession, uuid: str):
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed while deleting"
@@ -121,7 +121,7 @@ async def modify_product(db: AsyncSession, product: ProductUpdate, uuid: str, bu
         product_to_update.update_date = datetime.now(timezone.utc)
         try:
             await db.flush()
-        except IntegrityError as expt:
+        except IntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed while modifying"
