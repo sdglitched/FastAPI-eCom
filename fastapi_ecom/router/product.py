@@ -1,68 +1,290 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime, timezone
+from uuid import uuid4
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, delete, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from fastapi_ecom.database.db_setup import get_db
-from fastapi_ecom.database.pydantic_schemas.product import ProductCreate, ProductUpdate, ProductResultInternal, ProductManyResult, ProductManyResultInternal
-from fastapi_ecom.utils.crud.product import add_product, get_all_products, get_product_by_text, get_all_products_internal, get_product_by_uuid, delete_product, modify_product
-from fastapi_ecom.database.pydantic_schemas.business import BusinessInternal
+from fastapi_ecom.database.models.product import Product
+from fastapi_ecom.database.pydantic_schemas.product import (
+    ProductCreate,
+    ProductManyResult,
+    ProductManyResultInternal,
+    ProductResultInternal,
+    ProductUpdate,
+    ProductView,
+    ProductViewInternal,
+)
 from fastapi_ecom.utils.auth import verify_business_cred
-
 
 router = APIRouter(prefix="/product")
 
-@router.post("", response_model=ProductResultInternal, status_code=201, tags=["product"])
-async def add_new_product(product: ProductCreate, db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    new_product = await add_product(db=db, product=product, business_id = business_auth.uuid)
+@router.post("/create", status_code=status.HTTP_201_CREATED, response_model=ProductResultInternal, tags=["product"])
+async def add_product(product: ProductCreate, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+    """
+    Endpoint to add a new product by currently authenticated business.
+
+    :param product: Input data for adding a new product. Must adhere to the `ProductCreate` schema.
+    :param db: Active asynchronous database session dependency.
+    :param business_auth: Authenticated business object.
+
+    :return: Dictionary containing the action type and the added product data, validated and
+             serialized using the `ProductViewInternal` schema.
+
+    :raises HTTPException:
+        - If a uniqueness constraint fails, it returns a 409 Conflict status.
+        - If there are other database errors, it returns a 500 Internal Server Error.
+    """
+    db_product = Product(
+        name = product.name.strip(),
+        description = product.description.strip(),
+        category = product.category.strip(),
+        mfg_date = product.mfg_date,
+        exp_date = product.exp_date,
+        price = product.price,
+        business_id = business_auth.uuid,
+        uuid=uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
+    )
+    db.add(db_product)
+    try:
+        await db.flush()
+    except IntegrityError as expt:
+        raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected database error occurred."
+            ) from expt
     return {
         "action": "post",
-        "product": new_product
+        "product": ProductViewInternal.model_validate(db_product).model_dump()
     }
 
-@router.get("", response_model=ProductManyResult, tags=["product"])
-async def read_all_products(db: AsyncSession = Depends(get_db)):
-    products = await get_all_products(db)
+@router.get("/search", status_code=status.HTTP_200_OK, response_model=ProductManyResult, tags=["product"])
+async def get_products(
+    skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
+    limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
+    db: AsyncSession = Depends(get_db)
+) -> ProductManyResult:
+    """
+    Endpoint fetches a paginated list of products.
+
+    :param skip: Number of records to skip. Must be between 0 and int64.
+    :param limit: Maximum number of records to return. Must be between 1 and 100.
+    :param db: Active asynchronous database session dependency.
+
+    :return: Dictionary containing the action type and a list of products, validated and
+             serialized using the `ProductView` schema.
+
+    :raises HTTPException:
+        - If no products for the currently authenticated business exists in the database, it raises
+          404 Not Found.
+    """
+    query = select(Product).options(selectinload("*")).offset(skip).limit(limit)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No product present in database"
+        )
     return {
         "action": "get",
-        "products": products
+        "products": [ProductView.model_validate(product).model_dump() for product in products]
     }
 
-@router.get("/search/name/{text}", response_model=ProductManyResult, tags=["product"])
-async def read_all_products_by_text(text: str, db: AsyncSession = Depends(get_db)):
-    products = await get_product_by_text(db, text)
+@router.get("/search/name/{text}", status_code=status.HTTP_200_OK, response_model=ProductManyResult, tags=["product"])
+async def get_product_by_text(
+    text: str,
+    skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
+    limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
+    db: AsyncSession = Depends(get_db)
+) -> ProductManyResult:
+    """
+    Endpoint fetches a paginated list of products by name or description.
+
+    :param text: The search string used to match product names or descriptions.
+    :param skip: Number of records to skip. Must be between 0 and int64.
+    :param limit: Maximum number of records to return. Must be between 1 and 100.
+    :param db: Active asynchronous database session dependency.
+
+    :return: Dictionary containing the action type and a list of products, validated and
+             serialized using the `ProductView` schema.
+
+    :raises HTTPException:
+        If no matching products exists in the database, it raises 404 Not Found.
+    """
+    query = select(Product).where(or_(Product.name.ilike(f"%{text}%".lower()), Product.description.like(f"%{text}%".lower()))).options(selectinload("*")).offset(skip).limit(limit)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such product present in database"
+        )
     return {
         "action": "get",
-        "products": products
+        "products": [ProductView.model_validate(product).model_dump() for product in products]
     }
 
-@router.get("/search/internal", response_model=ProductManyResultInternal, tags=["product"])
-async def read_all_products_internal(db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    products = await get_all_products_internal(db, business_id = business_auth.uuid)
+@router.get("/search/internal", status_code=status.HTTP_200_OK, response_model=ProductManyResultInternal, tags=["product"])
+async def get_products_internal(
+    skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
+    limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> ProductManyResultInternal:
+    """
+    Endpoint fetches a paginated list of products associated with the authenticated business.
+
+    :param skip: Number of records to skip. Must be between 0 and int64.
+    :param limit: Maximum number of records to return. Must be between 1 and 100.
+    :param db: Active asynchronous database session dependency.
+    :param business_auth: Authenticated business object.
+
+    :return: Dictionary containing the action type and a list of products, validated and
+             serialized using the `ProductViewInternal` schema.
+
+    :raises HTTPException:
+        If no products are associated with the authenticated business, it raises 404 Not Found.
+    """
+    query = select(Product).where(Product.business_id == business_auth.uuid).options(selectinload("*")).offset(skip).limit(limit)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No product present in database"
+        )
     return {
         "action": "get",
-        "products": products
+        "products": [ProductViewInternal.model_validate(product).model_dump() for product in products]
     }
 
-@router.get("/search/uuid/{uuid}", response_model=ProductResultInternal, tags=["product"])
-async def read_product_by_uuid(uuid: str, db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    product = await get_product_by_uuid(db, uuid = uuid)
+@router.get("/search/uuid/{product_id}", status_code=status.HTTP_200_OK, response_model=ProductResultInternal, tags=["product"])
+async def get_product_by_uuid(product_id: str, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+    """
+    Endpoint fetches a specific product by its UUID associated with the authenticated business.
+
+    :param product_id: The UUID of the product to retrieve.
+    :param db: Active asynchronous database session dependency.
+    :param business_auth: Authenticated business object.
+
+    :return: Dictionary containing the action type and product details, validated and
+             serialized using the `ProductViewInternal` schema.
+
+    :raises HTTPException:
+        If no products with the given UUID is associated with the authenticated business, it raises
+        404 Not Found.
+    """
+    query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
+    result = await db.execute(query)
+    product_by_uuid = result.scalar_one_or_none()
+    if product_by_uuid is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not present in database"
+        )
     return {
         "action": "get",
-        "product": product
+        "product": ProductViewInternal.model_validate(product_by_uuid)
     }
 
-@router.delete("/delete/uuid/{uuid}", response_model=ProductResultInternal, tags=["product"])
-async def dlt_product(uuid: str, db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    product_to_delete = await delete_product(db=db, uuid=uuid)
+@router.delete("/delete/uuid/{product_id}", status_code=status.HTTP_202_ACCEPTED, response_model=ProductResultInternal, tags=["product"])
+async def delete_product(product_id: str, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+    """
+    Endpoint to delete a product by its UUID associated for an authenticated business.
+
+    :param product_id: The UUID of the product to retrieve.
+    :param db: Active asynchronous database session dependency.
+    :param business_auth: Authenticated business object.
+
+    :return: Dictionary containing the action type and the deleted product's data, validated and
+             serialized using the `ProductViewInternal` schema.
+
+    :raises HTTPException:
+        - If no products with the given UUID is associated with the authenticated business, it
+          raises 404 Not Found.
+        - If there are other database errors, it returns a 500 Internal Server Error.
+    """
+    query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
+    result = await db.execute(query)
+    product_to_delete = result.scalar_one_or_none()
+    if product_to_delete is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not present in database"
+        )
+    query = delete(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid))
+    await db.execute(query)
+    try:
+        await db.flush()
+    except IntegrityError as expt:
+        raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected database error occurred."
+            ) from expt
     return {
         "action": "delete",
-        "product": product_to_delete
+        "product": ProductViewInternal.model_validate(product_to_delete).model_dump()
     }
 
-@router.put("/update/uuid/{uuid}", response_model=ProductResultInternal, tags=["product"])
-async def updt_product(uuid: str, product: ProductUpdate, db: AsyncSession = Depends(get_db), business_auth: BusinessInternal = Depends(verify_business_cred)):
-    product_to_update = await modify_product(db=db, product=product, uuid=uuid, business_id = business_auth.uuid)
+@router.put("/update/uuid/{product_id}", status_code=status.HTTP_202_ACCEPTED, response_model=ProductResultInternal, tags=["product"])
+async def update_product(product_id: str, product: ProductUpdate, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+    """
+    Endpoint to update a product by its UUID associated for an authenticated business.
+
+    :param product_id: The UUID of the product to retrieve.
+    :param db: Active asynchronous database session dependency.
+    :param business_auth: Authenticated business object.
+
+    :return: Dictionary containing the action type and the updated product's data, validated and
+             serialized using the `ProductViewInternal` schema.
+
+    :raises HTTPException:
+        - If no products with the given UUID is associated with the authenticated business, it
+          raises 404 Not Found.
+        - If there are other database errors, it returns a 500 Internal Server Error.
+    """
+    query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
+    result = await db.execute(query)
+    product_to_update = result.scalar_one_or_none()
+    if product_to_update is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not present in database"
+        )
+    is_updated = False
+    if product.name != "":
+        product_to_update.name = product.name
+        is_updated = True
+    if product.description != "":
+        product_to_update.description = product.description
+        is_updated = True
+    if product.category != "":
+        product_to_update.category = product.category
+        is_updated = True
+    if str(product.mfg_date) != "1900-01-01 00:00:00+00:00":
+        product_to_update.mfg_date = product.mfg_date
+        is_updated = True
+    if str(product.exp_date) != "1900-01-01 00:00:00+00:00":
+        product_to_update.exp_date = product.exp_date
+        is_updated = True
+    if product.price != 0.0:
+        product_to_update.price = product.price
+        is_updated = True
+    if is_updated:
+        product_to_update.update_date = datetime.now(timezone.utc)
+        try:
+            await db.flush()
+        except IntegrityError as expt:
+            raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="An unexpected database error occurred."
+                ) from expt
     return {
         "action": "put",
-        "product": product_to_update
+        "product": ProductViewInternal.model_validate(product_to_update).model_dump()
     }

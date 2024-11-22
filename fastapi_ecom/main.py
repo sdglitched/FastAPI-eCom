@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 
-from fastapi_ecom.router import customer, business, product, order
-
+from fastapi_ecom.router import business, customer, order, product
 
 tags_metadata = [
     {"name": "customer", "description": "Operations on customeres"},
