@@ -283,8 +283,11 @@ $RECYCLE.BIN/
 # PostgreSQL containser setup file
 fastapi_ecom/container_setup.sh
 
-# Database credential file
+# Database credentials file
 fastapi_ecom/db_creds.py
 
 #PyCharm .idea folder
 .idea
+
+#Alembic ini file
+fastapi_ecom/alembic.ini
