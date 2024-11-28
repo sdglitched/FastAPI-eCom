@@ -1,11 +1,30 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean
+from sqlalchemy import Boolean, Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models.util import DateUpdateableMixin, UUIDCreatableMixin, DateCreatableMixin
+from fastapi_ecom.database.models.util import (
+    DateCreatableMixin,
+    DateUpdateableMixin,
+    UUIDCreatableMixin,
+)
 
 
 class Customer(Base, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixin):
+    """
+    Database model representing a customer entity.
+
+    :cvar __tablename__: Name of the database table.
+    :cvar id: Auto incremented ID for each records.
+    :cvar email: Email address of the customer, must be unique.
+    :cvar password: Password for the customer account.
+    :cvar name: Full name of the customer.
+    :cvar addr_line_1: Primary address line of the customer.
+    :cvar addr_line_2: Secondary address line of the customer (optional).
+    :cvar city: City where the customer resides.
+    :cvar state: State where the customer resides.
+    :cvar is_verified: Flag indicating if the customer account is verified.
+    :cvar orders: Relationship to the `Order` model, representing orders placed by the customer.
+    """
     __tablename__ = "customers"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)

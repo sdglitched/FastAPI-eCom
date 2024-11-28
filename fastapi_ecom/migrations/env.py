@@ -1,15 +1,20 @@
 import asyncio
-
 from logging.config import fileConfig
+
+from alembic import context
 
 # from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models import business, customer, order, product, order_details   #noqa: F401
+from fastapi_ecom.database.models import (  #noqa: F401
+    business,
+    customer,
+    order,
+    order_details,
+    product,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -77,6 +82,8 @@ def run_migrations_offline() -> None:
 #         with context.begin_transaction():
 #             context.run_migrations()
 
+# Single database connection with async db. Ref. https://github.com/sqlalchemy/alembic/blob/main/alembic/templates/async/env.py
+
 def do_run_migrations(connection):
     context.configure(connection=connection, target_metadata=target_metadata)
 
@@ -85,9 +92,8 @@ def do_run_migrations(connection):
 
 
 async def run_async_migrations():
-    """In this scenario we need to create an Engine
-    and associate a connection with the context.
-
+    """
+    In this scenario we need to create an Engine and associate a connection with the context.
     """
 
     connectable = async_engine_from_config(
@@ -103,7 +109,9 @@ async def run_async_migrations():
 
 
 def run_migrations_online():
-    """Run migrations in 'online' mode."""
+    """
+    Run migrations in 'online' mode.
+    """
 
     asyncio.run(run_async_migrations())
 

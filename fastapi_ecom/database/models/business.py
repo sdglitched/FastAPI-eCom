@@ -1,11 +1,31 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean
+from sqlalchemy import Boolean, Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from fastapi_ecom.database.db_setup import Base
-from fastapi_ecom.database.models.util import DateUpdateableMixin, UUIDCreatableMixin, DateCreatableMixin
+from fastapi_ecom.database.models.util import (
+    DateCreatableMixin,
+    DateUpdateableMixin,
+    UUIDCreatableMixin,
+)
 
 
 class Business(Base, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixin):
+    """
+    Database model representing a business entity.
+
+    :cvar __tablename__: Name of the database table.
+    :cvar id: Auto incremented ID for each records.
+    :cvar email: Email address of the business, must be unique.
+    :cvar password: Password for the business account.
+    :cvar name: Name of the business.
+    :cvar addr_line_1: Primary address line of the business.
+    :cvar addr_line_2: Secondary address line of the business (optional).
+    :cvar city: City where the business is located.
+    :cvar state: State where the business is located.
+    :cvar is_verified: Flag indicating if the business account is verified.
+    :cvar products: Relationship to the `Product` model, representing the products offered by the
+                    business.
+    """
     __tablename__ = "businesses"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)

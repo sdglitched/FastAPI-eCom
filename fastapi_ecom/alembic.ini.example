@@ -60,7 +60,7 @@ version_path_separator = os  # Use os.pathsep. Default configuration used for ne
 # are written from script.py.mako
 # output_encoding = utf-8
 
-sqlalchemy.url = postgresql+asyncpg://sdglitched:sdglitched@localhost:5432/eCom_db
+sqlalchemy.url = postgresql+asyncpg://<DATABASE-USER>:<DATABASE-PASSWORD>@<HOST>:<PORT>/<DATABASE-NAME>
 
 
 [post_write_hooks]

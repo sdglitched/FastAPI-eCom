@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 
-from fastapi_ecom.router import customer, business, product, order
-
+from fastapi_ecom.router import business, customer, order, product
 
 tags_metadata = [
-    {"name": "customer", "description": "Operations on customeres"},
     {"name": "business", "description": "Operations on businesses"},
     {"name": "product", "description": "Operations on products"},
+    {"name": "customer", "description": "Operations on customeres"},
     {"name": "order", "description": "Operations on orders"}
 ]
 
@@ -21,9 +20,13 @@ PREFIX = "/api/v1"
 
 @app.get("/")
 def root():
-    return{"message": "This is an E-Commerce API for businesses and end users using FastAPI."}
+    return{
+        "title": "FastAPI ECOM",
+        "description": "E-Commerce API for businesses and end users using FastAPI.",
+        "version": "0.1.0"
+    }
 
-app.include_router(customer.router, prefix=PREFIX)
 app.include_router(business.router, prefix=PREFIX)
 app.include_router(product.router, prefix=PREFIX)
+app.include_router(customer.router, prefix=PREFIX)
 app.include_router(order.router, prefix=PREFIX)
