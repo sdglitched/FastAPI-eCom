@@ -108,12 +108,13 @@ async def run_async_migrations():
     await connectable.dispose()
 
 
-def run_migrations_online():
+async def run_migrations_online():
     """
     Run migrations in 'online' mode.
     """
 
-    asyncio.run(run_async_migrations())
+    # asyncio.run(run_async_migrations())
+    await run_async_migrations()
 
 
 if context.is_offline_mode():
