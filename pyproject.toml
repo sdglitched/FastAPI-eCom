@@ -18,6 +18,12 @@ asyncpg = "^0.29.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.7.3"
+pytest = "^8.3.3"
+tox = "^4.23.2"
+pytest-cov = "^6.0.0"
+coverage = "^7.6.8"
+pytest-asyncio = "^0.24.0"
+aiosqlite = "^0.20.0"
 
 [tool.ruff]
 line-length = 100
@@ -28,6 +34,10 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "fastapi_ecom/*" = ["E501", "B008"]
+"tests/*" = ["S101", "E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core"]
