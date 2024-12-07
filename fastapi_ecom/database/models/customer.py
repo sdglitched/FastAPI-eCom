@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from fastapi_ecom.database.db_setup import Base
+from fastapi_ecom.database import baseobjc
 from fastapi_ecom.database.models.util import (
     DateCreatableMixin,
     DateUpdateableMixin,
@@ -9,7 +9,7 @@ from fastapi_ecom.database.models.util import (
 )
 
 
-class Customer(Base, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixin):
+class Customer(baseobjc, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixin):
     """
     Database model representing a customer entity.
 
