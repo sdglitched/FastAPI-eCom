@@ -281,13 +281,13 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,virtualenv,visualstudiocode
 
 # PostgreSQL containser setup file
-fastapi_ecom/container_setup.sh
+container_setup.sh
 
-# Database credentials file
-fastapi_ecom/db_creds.py
+# Configuration file
+config.py
 
 #PyCharm .idea folder
 .idea
 
 #Alembic ini file
-fastapi_ecom/alembic.ini
+alembic.ini

@@ -98,7 +98,32 @@ This project serves as a strong foundation for developers to build upon.
    CONTAINER ID  IMAGE                              COMMAND     CREATED        STATUS        PORTS                   NAMES
    71e1160d5ed5  docker.io/library/postgres:latest  postgres    3 minutes ago  Up 3 minutes  0.0.0.0:5432->5432/tcp, 5432/tcp  eCom_container
    ```
-5. Create a virtual environment in the said directory and activate it. As project does not support python 3.13 virtual environment needs to be of `python3.12`.  
+5. Make a copy of the default configuration file and add the preferred settings inside it.  
+   Command
+   ```shell
+   (venv) $ mv fastapi_ecom/config/config.py.example config.py
+   (venv) $ nano fastapi_ecom/config/config.py
+   ```
+   Change the variables as per your requirement
+   `database` = `<DATABASE-NAME>` as mentioned while setting up the database container.
+   `username` = `<DATABASE-USER>` as mentioned while setting up the database container.
+   `password` = `<DATABASE-PASSWORD>` as mentioned while setting up the database container.
+   `dtbsbhost` = `<HOST>` as mentioned while setting up the database container.
+   `dtbsbport` = `<PORT>` as mentioned while setting up the database container.
+   `dtbsdriver` = `postgresql+asyncpg` if async database driver to be used or `postgresql+psycopg2` is sync database driver to be used.
+   `servhost` = `127.0.0.1` if the service is intended to be accessible only on the same device.
+   `servport` = `8080` if the service is intended to be accessible on the port number `8080` or `[1-65535]` depending on your choice.
+   `cgreload` = `True` for use in development environments to which automatically reload the unvicorn service.
+   Command
+   ```shell
+   (venv) $ mv fastapi_ecom/migrations/alembic.ini.example fastapi_ecom/migrations/alembic.ini
+   (venv) $ nano fastapi_ecom/migrations/alembic.ini
+   ```
+   Change `sqlalchemy.url` with the above user variables
+   ```
+   sqlalchemy.url = postgresql+asyncpg://<DATABASE-USER>:<DATABASE-PASSWORD>@<HOST>:<PORT>/<DATABASE-NAME>
+   ```
+6. Create a virtual environment in the said directory and activate it. As project does not support python 3.13 virtual environment needs to be of `python3.12`.  
    Command
    ```shell
    $ virtualenv -p python3.12 venv
@@ -119,7 +144,7 @@ This project serves as a strong foundation for developers to build upon.
    ```shell
    (venv) $
    ```
-6. Install the project dependencies.  
+7. Install the project dependencies.  
    Command
    ```shell
    (venv) $ poetry check
@@ -183,57 +208,229 @@ This project serves as a strong foundation for developers to build upon.
       - Installing fastapi (0.111.0)
    
    Installing the current project: fastapi_ecom (0.1.0)
-7. Make changes to correctly configure the required variables for database and alembic initialization
+8. View the help topics of the installed `fastapi_ecom` project.  
    Command
    ```shell
-   (venv) $ mv db_creds.py.example db_creds.py
-   ```
-   Change the variables as per your requirement
-   ```
-   name = <DATABASE-NAME>
-   user = <DATABASE-USER>
-   password = <DATABASE-PASSWORD>
-   host = <HOST>
-   port = <PORT>
-   ```
-   Command
-   ```shell
-   (venv) $ mv alembic.ini.example alembic.ini
-   ```
-   Change `sqlalchemy.url` with the above user variables
-   ```
-   sqlalchemy.url = postgresql+asyncpg://<DATABASE-USER>:<DATABASE-PASSWORD>@<HOST>:<PORT>/<DATABASE-NAME>
-   ```
-8. Create the required database structure using `alembic` migration.  
-   Command
-   ```shell
-   (venv) $ alembic upgrade head
+   (venv) $ fastapi_ecom --help
    ```
    Sample output
    ```shell
+   Usage: fastapi_ecom [OPTIONS] COMMAND [ARGS]...
+      E-Commerce API for businesses and end users using FastAPI.
+   
+      This CLI tool provides various commands to manage the database schema, start
+      the application, and handle migrations.
+
+      :return: None
+
+   Options:
+      --help  Show this message and exit.
+
+   Commands:
+      create-migration  Create a new migration script
+      db-version        Show the current database version
+      downgrade-db      Downgrade the database to a specific version
+      setup             Setup the database schema
+      start             Start the FastAPI eComm application
+      upgrade-db        Upgrade the database to a specific version
+   ```
+9. Set up the database schema in the database configured by executing the following command.  
+   Command
+   ```shell
+   (venv) $ fastapi_ecom setup
+   ```
+   Sample output
+   ```shell
+   2024-12-08 20:53:52,870 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+   2024-12-08 20:53:52,871 INFO sqlalchemy.engine.Engine [raw sql] {}
+   2024-12-08 20:53:52,872 INFO sqlalchemy.engine.Engine select current_schema()
+   2024-12-08 20:53:52,872 INFO sqlalchemy.engine.Engine [raw sql] {}
+   2024-12-08 20:53:52,873 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+   2024-12-08 20:53:52,873 INFO sqlalchemy.engine.Engine [raw sql] {}
+   2024-12-08 20:53:52,874 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+   2024-12-08 20:53:52,877 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+   FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+   WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+   2024-12-08 20:53:52,877 INFO sqlalchemy.engine.Engine [generated in 0.00018s] {'table_name': 'businesses', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+   2024-12-08 20:53:52,879 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+   FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+   WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+   2024-12-08 20:53:52,879 INFO sqlalchemy.engine.Engine [cached since 0.00186s ago] {'table_name': 'customers', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+   2024-12-08 20:53:52,879 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+   FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+   WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+   2024-12-08 20:53:52,879 INFO sqlalchemy.engine.Engine [cached since 0.002436s ago] {'table_name': 'orders', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+   2024-12-08 20:53:52,880 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+   FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+   WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+   2024-12-08 20:53:52,880 INFO sqlalchemy.engine.Engine [cached since 0.003037s ago] {'table_name': 'order_details', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+   2024-12-08 20:53:52,880 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+   FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+   WHERE pg_catalog.pg_class.relname = %(table_name)s AND pg_catalog.pg_class.relkind = ANY (ARRAY[%(param_1)s, %(param_2)s, %(param_3)s, %(param_4)s, %(param_5)s]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != %(nspname_1)s
+   2024-12-08 20:53:52,880 INFO sqlalchemy.engine.Engine [cached since 0.003703s ago] {'table_name': 'products', 'param_1': 'r', 'param_2': 'p', 'param_3': 'f', 'param_4': 'v', 'param_5': 'm', 'nspname_1': 'pg_catalog'}
+   2024-12-08 20:53:52,882 INFO sqlalchemy.engine.Engine 
+   CREATE TABLE businesses (
+	   id SERIAL NOT NULL, 
+	   email_address VARCHAR(100) NOT NULL, 
+	   password TEXT NOT NULL, 
+	   business_name VARCHAR(100) NOT NULL, 
+	   address_line_1 TEXT NOT NULL, 
+	   address_line_2 TEXT, 
+	   city TEXT NOT NULL, 
+	   state TEXT NOT NULL, 
+	   is_verified BOOLEAN, 
+	   uuid TEXT NOT NULL, 
+	   creation_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   update_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   PRIMARY KEY (id), 
+	   UNIQUE (uuid)
+   )
+
+
+   2024-12-08 20:53:52,882 INFO sqlalchemy.engine.Engine [no key 0.00009s] {}
+   2024-12-08 20:53:52,892 INFO sqlalchemy.engine.Engine CREATE INDEX ix_businesses_id ON businesses (id)
+   2024-12-08 20:53:52,892 INFO sqlalchemy.engine.Engine [no key 0.00016s] {}
+   2024-12-08 20:53:52,893 INFO sqlalchemy.engine.Engine CREATE UNIQUE INDEX ix_businesses_email_address ON businesses (email_address)
+   2024-12-08 20:53:52,893 INFO sqlalchemy.engine.Engine [no key 0.00009s] {}
+   2024-12-08 20:53:52,894 INFO sqlalchemy.engine.Engine 
+   CREATE TABLE customers (
+   	id SERIAL NOT NULL, 
+	   email_address VARCHAR(100) NOT NULL, 
+	   password TEXT NOT NULL, 
+	   full_name VARCHAR(100) NOT NULL, 
+	   address_line_1 TEXT NOT NULL, 
+	   address_line_2 TEXT, 
+	   city TEXT NOT NULL, 
+	   state TEXT NOT NULL, 
+	   is_verified BOOLEAN, 
+	   uuid TEXT NOT NULL, 
+	   creation_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   update_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   PRIMARY KEY (id), 
+	   UNIQUE (uuid)
+   )
+
+
+   2024-12-08 20:53:52,894 INFO sqlalchemy.engine.Engine [no key 0.00008s] {}
+   2024-12-08 20:53:52,896 INFO sqlalchemy.engine.Engine CREATE UNIQUE INDEX ix_customers_email_address ON customers (email_address)
+   2024-12-08 20:53:52,896 INFO sqlalchemy.engine.Engine [no key 0.00009s] {}
+   2024-12-08 20:53:52,896 INFO sqlalchemy.engine.Engine CREATE INDEX ix_customers_id ON customers (id)
+   2024-12-08 20:53:52,896 INFO sqlalchemy.engine.Engine [no key 0.00011s] {}
+   2024-12-08 20:53:52,897 INFO sqlalchemy.engine.Engine 
+   CREATE TABLE orders (
+	   id SERIAL NOT NULL, 
+	   user_id TEXT NOT NULL, 
+	   order_date DATE NOT NULL, 
+	   total_price FLOAT NOT NULL, 
+	   uuid TEXT NOT NULL, 
+	   creation_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   update_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   PRIMARY KEY (id), 
+	   FOREIGN KEY(user_id) REFERENCES customers (uuid) ON DELETE CASCADE, 
+	   UNIQUE (uuid)
+   )
+
+
+   2024-12-08 20:53:52,897 INFO sqlalchemy.engine.Engine [no key 0.00008s] {}
+   2024-12-08 20:53:52,902 INFO sqlalchemy.engine.Engine CREATE INDEX ix_orders_id ON orders (id)
+   2024-12-08 20:53:52,902 INFO sqlalchemy.engine.Engine [no key 0.00021s] {}
+   2024-12-08 20:53:52,903 INFO sqlalchemy.engine.Engine 
+   CREATE TABLE products (
+	   id SERIAL NOT NULL, 
+	   product_name VARCHAR(100) NOT NULL, 
+	   description TEXT, 
+	   category VARCHAR(50) NOT NULL, 
+	   manufacturing_date DATE NOT NULL, 
+	   expiry_date DATE NOT NULL, 
+	   product_price FLOAT NOT NULL, 
+	   business_id TEXT NOT NULL, 
+	   uuid TEXT NOT NULL, 
+	   creation_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   update_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	   PRIMARY KEY (id), 
+	   FOREIGN KEY(business_id) REFERENCES businesses (uuid) ON DELETE CASCADE, 
+	   UNIQUE (uuid)
+   )
+
+
+   2024-12-08 20:53:52,903 INFO sqlalchemy.engine.Engine [no key 0.00009s] {}
+   2024-12-08 20:53:52,905 INFO sqlalchemy.engine.Engine CREATE INDEX ix_products_id ON products (id)
+   2024-12-08 20:53:52,905 INFO sqlalchemy.engine.Engine [no key 0.00008s] {}
+   2024-12-08 20:53:52,906 INFO sqlalchemy.engine.Engine 
+   CREATE TABLE order_details (
+   	id SERIAL NOT NULL, 
+   	product_id TEXT NOT NULL, 
+   	quantity INTEGER NOT NULL, 
+   	product_price FLOAT NOT NULL, 
+   	order_id TEXT NOT NULL, 
+   	uuid TEXT NOT NULL, 
+   	creation_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+   	update_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+   	PRIMARY KEY (id), 
+   	FOREIGN KEY(product_id) REFERENCES products (uuid), 
+   	FOREIGN KEY(order_id) REFERENCES orders (uuid) ON DELETE CASCADE, 
+   	UNIQUE (uuid)
+   )
+
+
+   2024-12-08 20:53:52,906 INFO sqlalchemy.engine.Engine [no key 0.00008s] {}
+   2024-12-08 20:53:52,908 INFO sqlalchemy.engine.Engine CREATE INDEX ix_order_details_id ON order_details (id)
+   2024-12-08 20:53:52,908 INFO sqlalchemy.engine.Engine [no key 0.00008s] {}
+   2024-12-08 20:53:52,909 INFO sqlalchemy.engine.Engine COMMIT
    INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
    INFO  [alembic.runtime.migration] Will assume transactional DDL.
-   INFO  [alembic.runtime.migration] Running upgrade  -> 306d801996a6, initial model setup
-   INFO  [alembic.runtime.migration] Running upgrade 306d801996a6 -> d6dd218459b7, change datatype of password column
-   INFO  [alembic.runtime.migration] Running upgrade d6dd218459b7 -> 7d1eff027259, remove creation_date from base models and add using mixin
-   INFO  [alembic.runtime.migration] Running upgrade 7d1eff027259 -> 97e78a849e66, add creation date mixin in orders
-   INFO  [alembic.runtime.migration] Running upgrade 97e78a849e66 -> 29f5c5a0304d, modify date field mixin
-   INFO  [alembic.runtime.migration] Running upgrade 29f5c5a0304d -> 60c8ccec25ac, create and update date with relation correction
+   INFO  [alembic.runtime.migration] Running stamp_revision  -> 60c8ccec25ac
    ```
-9. Run the development server.  
-   Command
-   ```
-   uvicorn main:app --reload
-   ```
-   Sample output
-   ```shell
-   INFO:     Will watch for changes in these directories: ['/home/sdglitched/FastAPI_eCom/fastapi_ecom']
-   INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-   INFO:     Started reloader process [21520] using WatchFiles
-   INFO:     Started server process [21522]
-   INFO:     Waiting for application startup.
-   INFO:     Application startup complete.
-   ```
+10. Check the current database revision by executing the following command.  
+    Command
+    ```
+    (venv) $ fastapi_ecom db-version
+    ```
+    Sample output
+    ```shell
+    {'60c8ccec25ac (head)'}
+    ```
+11. Downgrade or upgrade the database revision by executing the following commands.  
+    Command
+    ```
+    (venv) $ fastapi_ecom downgrade-db "29f5c5a0304d"
+    ```
+    Sample output
+    ```shell
+    Downgraded to: {'29f5c5a0304d'}
+    ```
+    Command
+    ```
+    (venv) $ fastapi_ecom upgrade-db
+    ```
+    Sample output
+    ```shell
+    Upgraded to:  {'60c8ccec25ac (head)'}
+    ```
+12. Create a new migration script by executing the following commands.  
+    Command
+    ```
+    (venv) $ fastapi_ecom create-migration "test migration" --autogenerate
+    ```
+    Sample output
+    ```shell
+    Generating /home/sdglitched/FastAPI_eCom/fastapi_ecom/migrations/versions/2eda38369533_test_migration.py ...  done
+    ```
+    Note: It is only intended for new development
+13. Start the application service by executing the following command.  
+    Command
+    ```
+    (venv) $ fastapi_ecom start
+    ```
+    Sample output
+    ```shell
+    INFO:     Will watch for changes in these directories: ['/home/sdglitched/FastAPI_eCom']
+    INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+    INFO:     Started reloader process [64332] using WatchFiles
+    INFO:     Started server process [64334]
+    INFO:     Waiting for application startup.
+    INFO:     Application startup complete.
+    ```
 
 ## Usage
 1. Default Route
