@@ -1,0 +1,26 @@
+# The database name
+database = ""
+
+# The username for the database user
+username = ""
+
+# The password for the database user
+password = ""
+
+# The location of serving the database service
+dtbsbhost = "localhost"
+
+# The port on which the database service is hosted
+dtbsbport = "5432"
+
+# The driver used to access the database
+dtbsdriver = "postgresql+asyncpg"
+
+# The location of serving the application service
+servhost = "127.0.0.1"
+
+# The port on which the application service is hosted
+servport = 8080
+
+# Automatically reload if the code is changed
+cgreload = True
