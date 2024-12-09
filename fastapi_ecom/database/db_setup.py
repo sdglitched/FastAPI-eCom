@@ -1,24 +1,41 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
+from pathlib import Path
+from typing import AsyncGenerator
 
-from fastapi_ecom import db_creds as dbc
+from alembic import command, config
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Construct the database URL using credentials from the `db_creds` module.
-# This assumes a PostgreSQL database with the `asyncpg` driver.
-SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://{dbc.user}:{dbc.password}@{dbc.host}:{dbc.port}/{dbc.name}"
+from fastapi_ecom.database import (  #noqa: F401
+    baseobjc,
+    get_async_session,
+    get_database_url,
+    get_engine,
+    migrpath,
+    models,
+)
 
-# Create an asynchronous SQLAlchemy engine for database communication.
-# `echo=True` enables logging of all SQL statements for debugging purposes.
-async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
-# Create an asynchronous session factory for handling database sessions.
-# `expire_on_commit=False` ensures that objects remain usable after a session commit.
-AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False)
+def make_database() -> None:
+    """
+    Initializes the database and creates all the models.
 
-# Base class for ORM models, to be used with SQLAlchemy's declarative system.
-Base = declarative_base()
+    This function performs the following:
+    - Creates all tables defined in the `baseobjc` ORM models.
+    - Configures Alembic with the database connection URL.
+    - Marks the database as being at the latest migration version.
+    """
+    # Use the synchronous engine to create the database schema.
+    sync_engine = get_engine(engine="sync")
+    baseobjc.metadata.create_all(bind=sync_engine)
 
-async def get_db():
+    # Set up Alembic configuration for migration management.
+    alembic_config = config.Config(str(Path(str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve()),"alembic.ini").resolve()))
+    alembic_config.set_main_option("script_location", migrpath)
+    alembic_config.set_main_option("sqlalchemy.url", get_database_url().render_as_string(hide_password=False))
+
+    # Mark the database at the latest migration head.
+    command.stamp(alembic_config, "head")
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to provide a database session for FastAPI routes.
 
@@ -33,7 +50,7 @@ async def get_db():
 
     :raises exception: Re-raises any exception encountered during the session lifecycle.
     """
-    db = AsyncSessionLocal()  # Initialize a new database session.
+    db = get_async_session()()  # Initialize a new database session.
     try:
         yield db
         await db.commit()  # Commit changes to the database if no exception occurs.
