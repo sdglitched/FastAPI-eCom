@@ -1,81 +1,124 @@
-import os
+from pathlib import PosixPath
+from typing import AsyncGenerator, Callable
+from unittest.mock import MagicMock
 
 import pytest
-from alembic import command
-from alembic.config import Config
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from click.testing import CliRunner
+from fastapi import FastAPI
+from fastapi.security import HTTPBasicCredentials
+from httpx import ASGITransport, AsyncClient
+from pytest_mock import MockerFixture
+from sqlalchemy import URL
 
-from fastapi_ecom.database.db_setup import get_db
-from fastapi_ecom.main import app
+from fastapi_ecom.app import app
+from fastapi_ecom.config import config as cnfg
+from fastapi_ecom.database import baseobjc, get_async_session, get_engine
+from fastapi_ecom.utils.auth import security
+from tests.business import _test_data_business
+from tests.customer import _test_data_customer
+from tests.order import _test_data_order_details, _test_data_orders
+from tests.product import _test_data_product
 
-TEST_DATABASE_URL = "postgresql+asyncpg://test:test@localhost:5432/test"
 
-test_async_engine = create_async_engine(TEST_DATABASE_URL, echo=True)
+@pytest.fixture
+def runner() -> CliRunner:
+    """
+    Fixture for Click's CLI Runner.
 
-TestAsyncSessionLocal = async_sessionmaker(test_async_engine, expire_on_commit=False)
+    :return: Click's CLI Runner.
+    """
+    return CliRunner()
 
-
-@pytest.fixture()
-async def test_app():
+@pytest.fixture
+async def test_app() -> FastAPI:
     """
     Fixture to provide the FastAPI app instance for testing.
+
+    :return: FastAPI app instance.
     """
     return app
 
 @pytest.fixture
-async def client(test_app):
+async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """
-    Provide a test client for the FastAPI app.
+    Fixture to provide a test client for the FastAPI app.
+
+    :param test_app: The fixture which provides FastAPI app instance.
+
+    :return: An instance of `AsyncClient` for testing HTTP endpoints.
     """
-    async with AsyncClient(app=test_app, base_url="http://test") as client:
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
-@pytest.fixture(scope="session")
-async def setup_test_database():
+@pytest.fixture
+async def get_test_database_url(tmp_path: PosixPath, mocker: MockerFixture) -> URL:
     """
-    Set up the test database with Alembic migrations.
-    This fixture runs once per test session.
+    Fixture to provide the database URL for testing and setting the echo for sqlalchemy.
+
+    :param tmp_path: Inbuilt fixture which provides temporary directory.
+    :param mocker: Mock fixture to be used for mocking desired functionality.
+
+    :return: URL string for the SQLite test database.
     """
-    # Set the environment variable for Alembic
-    os.environ["TEST_DATABASE_URL"] = TEST_DATABASE_URL
-
-    # Configure Alembic to use the test database
-    alembic_config = Config(os.path.join(os.getcwd(),"fastapi_ecom/alembic.ini"))
-    alembic_config.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
-    alembic_config.set_main_option("script_location", os.path.join(os.getcwd(),"fastapi_ecom/migrations/"))
-    
-    # Apply migrations
-    command.upgrade(alembic_config, "head")
-
-    yield  # Test database setup is complete
-
-    # Teardown: Drop all tables after tests
-    command.downgrade(alembic_config, "base")
-
-    # Cleanup connections and dispose of the engine
-    await test_async_engine.dispose()
-
-@pytest.fixture(scope="function")
-async def override_get_db(setup_test_database):
-    """
-    Override the `get_db` dependency to use the test database session.
-    """
-    async def _get_db():
-        db = TestAsyncSessionLocal()
-        try:
-            yield db
-            await db.commit()
-        except Exception:
-            await db.rollback()
-            raise
-        finally:
-            await db.close()
-    return _get_db
+    SQLALCHEMY_DATABASE_URL = URL.create(
+        drivername="sqlite+aiosqlite",
+        database=f"{tmp_path.as_posix()}/eCom.db",
+    )
+    mocker.patch.object(URL, "create", return_value=SQLALCHEMY_DATABASE_URL)
+    cnfg.confecho = False
+    return SQLALCHEMY_DATABASE_URL
 
 @pytest.fixture(autouse=True)
-async def apply_db_override(test_app, override_get_db):
+async def db_test_data(get_test_database_url: MagicMock) -> None:
     """
-    Automatically apply the `override_get_db` fixture for all tests.
+    Fixture to populate the test database with initial test data.
+
+    :param get_test_database_url: The fixture which generates test database URL.
+
+    :return:
     """
-    test_app.dependency_overrides[get_db] = override_get_db
+    async_engine = get_engine()
+
+    async with async_engine.begin() as conn:
+        await conn.run_sync(baseobjc.metadata.drop_all)  # Ensure no old tables persist
+        await conn.run_sync(baseobjc.metadata.create_all)
+
+    db = get_async_session()()
+    for data in _test_data_business().values():
+        db.add(data)
+    for data in _test_data_customer().values():
+        db.add(data)
+    for data in _test_data_product().values():
+        db.add(data)
+    for data in _test_data_orders().values():
+        db.add(data)
+    for data in _test_data_order_details().values():
+        db.add(data)
+
+    await db.commit()
+
+@pytest.fixture
+async def override_security(mocker: MockerFixture) -> Callable[[], HTTPBasicCredentials]:
+    """
+    Fixture to override the `security` dependency.
+
+    :param mocker: Mock fixture to be used for mocking desired functionality
+
+    :return: Instance of `HTTPBasicCredentials` with provided security credentials.
+    """
+    mock_credentials = HTTPBasicCredentials(username="delete@example.com", password="delete")
+    mocker.patch("fastapi.security.http.HTTPBasic.__call__", return_value=mock_credentials)
+    return lambda: mock_credentials
+
+@pytest.fixture(autouse=True)
+async def apply_security_override(test_app, override_security):
+    """
+    Setup test client with dependency override for `security`.
+
+    :param test_app: The fixture which provides FastAPI app instance.
+    :param override_security: The fixture which provides security credentials.
+
+    :return:
+    """
+    test_app.dependency_overrides[security] = override_security
