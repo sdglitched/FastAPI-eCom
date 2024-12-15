@@ -24,6 +24,7 @@ pytest-cov = "^6.0.0"
 coverage = "^7.6.8"
 pytest-asyncio = "^0.24.0"
 aiosqlite = "^0.20.0"
+pytest-mock = "^3.14.0"
 
 [tool.ruff]
 line-length = 100
@@ -34,7 +35,7 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "fastapi_ecom/*" = ["E501", "B008"]
-"tests/*" = ["S101", "E501"]
+"tests/*" = ["S101", "S106", "E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -45,3 +46,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 fastapi_ecom = "fastapi_ecom.main:main"
+
+[tool.coverage.run]
+concurrency = ["greenlet", "thread"]
