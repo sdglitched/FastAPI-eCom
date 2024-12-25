@@ -129,7 +129,7 @@ async def get_orders(
     query = select(Order).where(Order.user_id == customer_auth.uuid).options(selectinload(Order.order_details)).offset(skip).limit(limit)
     result = await db.execute(query)
     orders = result.scalars().unique().all()
-    if orders is None:
+    if not orders:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -186,7 +186,7 @@ async def get_orders_internal(
     query = select(Order).options(selectinload(Order.order_details)).offset(skip).limit(limit)
     result = await db.execute(query)
     orders = result.scalars().unique().all()
-    if orders is None:
+    if not orders:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -234,7 +234,7 @@ async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), c
     query = select(Order).where(and_(Order.user_id == customer_auth.uuid, Order.uuid == order_id)).options(selectinload(Order.order_details))
     result = await db.execute(query)
     order = result.scalar_one_or_none()
-    if order is None:
+    if not order:
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
@@ -284,7 +284,7 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
     query = select(Order).where(and_(Order.user_id == customer_auth.uuid, Order.uuid == order_id)).options(selectinload(Order.order_details))
     result = await db.execute(query)
     order_to_delete = result.scalar_one_or_none()
-    if order_to_delete is None:
+    if not order_to_delete:
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
