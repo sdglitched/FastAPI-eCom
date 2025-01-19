@@ -8,7 +8,10 @@ from httpx import AsyncClient
         pytest.param(None, id="ROOT GET Endpoint - Fetch the root endpoint of this application")
     ]
 )
-async def test_root(client: AsyncClient, _: None) -> None:
+async def test_root(
+    client: AsyncClient,
+    _: None
+) -> None:
     """
     Test the root ('/') endpoint.
 

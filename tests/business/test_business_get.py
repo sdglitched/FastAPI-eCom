@@ -1,6 +1,9 @@
+from typing import AsyncGenerator
+
 import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.business import _test_data_business
 
@@ -11,11 +14,18 @@ from tests.business import _test_data_business
         pytest.param(None, id="BUSINESS GET Endpoint - Fetch email of the authenticated business")
     ]
 )
-async def test_get_business_me(client: AsyncClient, _: None) -> None:
+async def test_get_business_me(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        _: None
+) -> None:
     """
     Test the `get` endpoint for the currently authenticated business of the Business API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
 
     :return:
     """
@@ -44,12 +54,20 @@ async def test_get_business_me(client: AsyncClient, _: None) -> None:
         pytest.param(None, id="BUSINESS GET Endpoint - Fail authentication for business")
     ]
 )
-async def test_get_business_me_fail(client: AsyncClient, mocker: MockerFixture, _: None) -> None:
+async def test_get_business_me_fail(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        mocker: MockerFixture,
+        _: None
+) -> None:
     """
     Test the `get` endpoint for the incorrectly authenticated business of the Business API.
 
     :param client: The test client to send HTTP requests.
-    :param mocker: Mock fixture to be used for mocking desired funtionality
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
+    :param mocker: Mock fixture to be used for mocking desired functionality.
 
     :return:
     """
@@ -75,11 +93,16 @@ async def test_get_business_me_fail(client: AsyncClient, mocker: MockerFixture, 
         pytest.param(None, id="BUSINESS GET Endpoint - Fetch all the businesses")
     ]
 )
-async def test_get_businesses(client: AsyncClient, _: None) -> None:
+async def test_get_businesses(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        _: None
+) -> None:
     """
     Test the `get` endpoint for fetching all the businesses of the Business API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
 
     :return:
     """

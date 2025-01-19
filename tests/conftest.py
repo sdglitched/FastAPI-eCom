@@ -69,7 +69,7 @@ async def get_test_database_url(tmp_path: PosixPath, mocker: MockerFixture) -> U
     cnfg.confecho = False
     return SQLALCHEMY_DATABASE_URL
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 async def db_test_data(get_test_database_url: MagicMock) -> None:
     """
     Fixture to populate the test database with initial test data.
@@ -111,7 +111,7 @@ async def override_security(mocker: MockerFixture) -> Callable[[], HTTPBasicCred
     mocker.patch("fastapi.security.http.HTTPBasic.__call__", return_value=mock_credentials)
     return lambda: mock_credentials
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 async def apply_security_override(test_app, override_security):
     """
     Setup test client with dependency override for `security`.

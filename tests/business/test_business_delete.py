@@ -1,5 +1,8 @@
+from typing import AsyncGenerator
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.business import _test_data_business
 
@@ -10,12 +13,19 @@ from tests.business import _test_data_business
         pytest.param(None, id="BUSINESS DELETE Endpoint - Deletes currently authenticated business")
     ]
 )
-async def test_delete_business(client: AsyncClient, _: None) -> None:
+async def test_delete_business(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        _: None
+) -> None:
     """
     Test the `delete` endpoint for deleting the currently authenticated business of the Business
     API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
 
     :return:
     """

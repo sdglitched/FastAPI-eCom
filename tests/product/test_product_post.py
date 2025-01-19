@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import AsyncGenerator, Dict
 from uuid import UUID
 
 import pytest
@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.utils.auth import security
 
@@ -26,12 +27,21 @@ from fastapi_ecom.utils.auth import security
         )
     ]
 )
-async def test_create_product(test_app: FastAPI, client: AsyncClient, mocker: MockerFixture, payload: Dict[str, str]) -> None:
+async def test_create_product(
+        test_app: FastAPI,
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        mocker: MockerFixture,
+        payload: Dict[str, str]
+) -> None:
     """
     Test the `create` endpoint of the Product API.
 
     :param test_app: The fixture which returns the FastAPI app instance.
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: The mocker fixture of `pytest_mock`.
     :param payload: A dictionary containing the data for product creation.
 

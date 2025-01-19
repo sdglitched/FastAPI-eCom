@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import AsyncGenerator, Dict
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.parametrize(
@@ -35,11 +36,21 @@ from httpx import AsyncClient
         )
     ]
 )
-async def test_update_customer(client: AsyncClient, payload: Dict[str, str], type: str) -> None:
+async def test_update_customer(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        payload: Dict[str, str],
+        type: str
+) -> None:
     """
     Test the `put` endpoint for updating the currently authenticated customer of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
+    :param payload: A dictionary containing the data for updating customer.
+    :param type: A string indicating the type of test data.
 
     :return:
     """

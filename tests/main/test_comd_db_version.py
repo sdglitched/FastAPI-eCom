@@ -1,7 +1,10 @@
+from typing import AsyncGenerator
+
 import pytest
 from alembic import command, config
 from click.testing import CliRunner
 from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.main import main
 from tests import _alempath
@@ -13,14 +16,21 @@ from tests import _alempath
         pytest.param("db-version", 0, id="MAIN Function - DB-VERSION - Check the current revision of the database schema")
     ]
 )
-def test_comd_db_version(runner: CliRunner, cmd: str, code: int, get_test_database_url: URL) -> None:
+def test_comd_db_version(
+        runner: CliRunner,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        get_test_database_url: URL,
+        cmd: str,
+        code: int
+) -> None:
     """
     Test the functionality cli `db-version` command.
 
     :param runner: Fixture to invoke CLI commands programmatically.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param get_test_database_url: The fixture which generates test database URL.
     :param cmd: The command to test.
     :param code: Expected exit code.
-    :param get_test_database_url: The fixture which generates test database URL.
 
     :return:
     """

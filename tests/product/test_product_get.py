@@ -1,8 +1,11 @@
+from typing import AsyncGenerator
+
 import pytest
 from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.utils.auth import security
 from tests.product import _test_data_product
@@ -14,11 +17,16 @@ from tests.product import _test_data_product
         pytest.param(None, id="PRODUCT GET Endpoint - Fetch all the products")
     ]
 )
-async def test_get_products(client: AsyncClient, _: None) -> None:
+async def test_get_products(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        _: None
+) -> None:
     """
     Test the `get` endpoint for fetching all the products of the Product API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
 
     :return:
     """
@@ -60,11 +68,17 @@ async def test_get_products(client: AsyncClient, _: None) -> None:
         pytest.param("xxxxyyyy", False, id="PRODUCT GET Endpoint - Fail to fetch any matching products"),
     ]
 )
-async def test_get_product_by_text(client: AsyncClient, text: str, present: bool) -> None:
+async def test_get_product_by_text(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        text: str,
+        present: bool
+) -> None:
     """
     Test the `get` endpoint for fetching a single or all the matching products of the Product API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
     :param text: The search string used to match product name or description of products.
     :param present: Whether the product associated with the business exists.
 
@@ -111,13 +125,23 @@ async def test_get_product_by_text(client: AsyncClient, text: str, present: bool
         pytest.param("fd4a8cac", False, id="PRODUCT GET Endpoint - Fetch all the products associated with the authenticated business")
     ]
 )
-async def test_get_products_internal(test_app: FastAPI, client: AsyncClient, mocker: MockerFixture, business_id: str, present: bool) -> None:
+async def test_get_products_internal(
+        test_app: FastAPI,
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        mocker: MockerFixture,
+        business_id: str,
+        present: bool
+) -> None:
     """
     Test the `get` endpoint for fetching all the products associated with the authenticated
     business of the Product API.
 
     :param test_app: The fixture which returns the FastAPI app instance.
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: The mocker fixture of pytest-mock.
     :param business_id: UUID of business to fetch product from.
     :param present: Whether the product associated with the business exists.
@@ -178,13 +202,24 @@ async def test_get_products_internal(test_app: FastAPI, client: AsyncClient, moc
         pytest.param("d76a11f2", "xxxxyyyy", False, id="PRODUCT GET Endpoint - Fail to fetch specific product by its UUID which is associated with the authenticated business")
     ]
 )
-async def test_get_product_by_uuid(test_app: FastAPI, client: AsyncClient, mocker: MockerFixture, business_id: str, product_id: str, present: bool) -> None:
+async def test_get_product_by_uuid(
+        test_app: FastAPI,
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        mocker: MockerFixture,
+        business_id: str,
+        product_id: str,
+        present: bool
+) -> None:
     """
     Test the `get` endpoint for fetching the specific product associated with the authenticated
     business of the Product API.
 
     :param test_app: The fixture which returns the FastAPI app instance.
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: The mocker fixture of pytest-mock.
     :param business_id: UUID of business to fetch product from.
     :param product_id: UUID of the product associated with the business.

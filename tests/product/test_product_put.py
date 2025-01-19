@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
-from typing import Dict
+from typing import AsyncGenerator, Dict
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.product import _test_data_product
 
@@ -40,11 +41,21 @@ from tests.product import _test_data_product
         )
     ]
 )
-async def test_update_product(client: AsyncClient, payload: Dict[str, str], business_id: str, product_id: str, present: bool) -> None:
+async def test_update_product(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        payload: Dict[str, str],
+        business_id: str,
+        product_id: str,
+        present: bool
+) -> None:
     """
     Test the `create` endpoint of the Product API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param payload: A dictionary containing the data for product creation.
     :param business_id: UUID of the business whose product to be deleted.
     :param product_id: UUID of the product associated with the business which should be deleted.

@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import AsyncGenerator, Dict
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.parametrize(
@@ -35,11 +36,16 @@ from httpx import AsyncClient
         )
     ]
 )
-async def test_create_customer(client: AsyncClient, payload: Dict[str, str], type: str) -> None:
+async def test_create_customer(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        payload: Dict[str, str],
+        type: str) -> None:
     """
     Test the `create` endpoint of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
     :param payload: A dictionary containing the data for customer creation.
     :param type: A string indicating the type of test data.
 

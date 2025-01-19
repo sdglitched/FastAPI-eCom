@@ -96,7 +96,12 @@ from fastapi_ecom.main import main
         )
     ]
 )
-def test_main_help(runner: CliRunner, cmd: str, code: int, output: List[str]) -> None:
+def test_main_help(
+        runner: CliRunner,
+        cmd: str,
+        code: int,
+        output: List[str]
+) -> None:
     """
     Test the basic cli help functionality.
 

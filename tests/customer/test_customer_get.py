@@ -1,6 +1,9 @@
+from typing import AsyncGenerator
+
 import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.customer import _test_data_customer
 
@@ -11,11 +14,18 @@ from tests.customer import _test_data_customer
         pytest.param(None, id="CUSTOMER GET Endpoint - Fetch email of the authenticated customer")
     ]
 )
-async def test_get_customer_me(client: AsyncClient, _: None) -> None:
+async def test_get_customer_me(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        _: None
+) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
 
     :return:
     """
@@ -44,11 +54,19 @@ async def test_get_customer_me(client: AsyncClient, _: None) -> None:
         pytest.param(None, id="CUSTOMER GET Endpoint - Fail authentication for customer")
     ]
 )
-async def test_get_customer_me_fail(client: AsyncClient, mocker: MockerFixture, _: None) -> None:
+async def test_get_customer_me_fail(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        mocker: MockerFixture,
+        _: None
+) -> None:
     """
     Test the `get` endpoint for the incorrectly authenticated customer of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: Mock fixture to be used for mocking desired functionality
 
     :return:
@@ -75,11 +93,15 @@ async def test_get_customer_me_fail(client: AsyncClient, mocker: MockerFixture, 
         pytest.param(None, id="CUSTOMER GET Endpoint - Fetch all the customers")
     ]
 )
-async def test_get_customers(client: AsyncClient, _: None) -> None:
+async def test_get_customers(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        _: None) -> None:
     """
     Test the `get` endpoint for fetching all the customers of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
 
     :return:
     """

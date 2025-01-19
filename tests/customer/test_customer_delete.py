@@ -1,5 +1,8 @@
+from typing import AsyncGenerator
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.customer import _test_data_customer
 
@@ -10,12 +13,19 @@ from tests.customer import _test_data_customer
         pytest.param(None, id="CUSTOMER DELETE Endpoint - Deletes currently authenticated customer")
     ]
 )
-async def test_delete_customer(client: AsyncClient, _: None) -> None:
+async def test_delete_customer(
+        client: AsyncClient,
+        db_test_data: AsyncGenerator[AsyncSession, None],
+        apply_security_override,
+        _: None
+) -> None:
     """
     Test the `delete` endpoint for deleting the currently authenticated customer of the Customer
     API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param apply_security_override: Fixture to set up test client with dependency override for `security`.
 
     :return:
     """

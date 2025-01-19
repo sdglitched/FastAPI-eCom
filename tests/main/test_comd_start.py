@@ -13,7 +13,12 @@ from fastapi_ecom.main import main
         pytest.param("start", 0, id="MAIN Function - START - Start FastAPI server")
     ]
 )
-def test_comd_start(runner: CliRunner, mocker: MockerFixture, cmd: str, code: int) -> None:
+def test_comd_start(
+        runner: CliRunner,
+        mocker: MockerFixture,
+        cmd: str,
+        code: int
+) -> None:
     """
     Test the functionality cli `start` command.
 
