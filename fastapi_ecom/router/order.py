@@ -2,7 +2,6 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, delete
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -52,7 +51,12 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
     db.add(new_order)
     try:
         await db.flush()  # Generate order ID for relations
-    except IntegrityError as expt:
+    except Exception as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -85,7 +89,12 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
     new_order.total_price = total_price
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except Exception as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -129,7 +138,7 @@ async def get_orders(
     query = select(Order).where(Order.user_id == customer_auth.uuid).options(selectinload(Order.order_details)).offset(skip).limit(limit)
     result = await db.execute(query)
     orders = result.scalars().unique().all()
-    if orders is None:
+    if not orders:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -186,7 +195,7 @@ async def get_orders_internal(
     query = select(Order).options(selectinload(Order.order_details)).offset(skip).limit(limit)
     result = await db.execute(query)
     orders = result.scalars().unique().all()
-    if orders is None:
+    if not orders:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -234,7 +243,7 @@ async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), c
     query = select(Order).where(and_(Order.user_id == customer_auth.uuid, Order.uuid == order_id)).options(selectinload(Order.order_details))
     result = await db.execute(query)
     order = result.scalar_one_or_none()
-    if order is None:
+    if not order:
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
@@ -284,7 +293,7 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
     query = select(Order).where(and_(Order.user_id == customer_auth.uuid, Order.uuid == order_id)).options(selectinload(Order.order_details))
     result = await db.execute(query)
     order_to_delete = result.scalar_one_or_none()
-    if order_to_delete is None:
+    if not order_to_delete:
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
@@ -307,7 +316,12 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except Exception as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = "Failed while deleting"

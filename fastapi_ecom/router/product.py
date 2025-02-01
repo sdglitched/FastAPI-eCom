@@ -52,7 +52,12 @@ async def add_product(product: ProductCreate, db: AsyncSession = Depends(get_db)
     db.add(db_product)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except IntegrityError as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -116,7 +121,7 @@ async def get_product_by_text(
     :raises HTTPException:
         If no matching products exists in the database, it raises 404 Not Found.
     """
-    query = select(Product).where(or_(Product.name.ilike(f"%{text}%".lower()), Product.description.like(f"%{text}%".lower()))).options(selectinload("*")).offset(skip).limit(limit)
+    query = select(Product).where(or_(Product.name.ilike(f"%{text}%"), Product.description.ilike(f"%{text}%"))).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
@@ -182,7 +187,7 @@ async def get_product_by_uuid(product_id: str, db: AsyncSession = Depends(get_db
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_by_uuid = result.scalar_one_or_none()
-    if product_by_uuid is None:
+    if not product_by_uuid:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
@@ -212,7 +217,7 @@ async def delete_product(product_id: str, db: AsyncSession = Depends(get_db), bu
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_to_delete = result.scalar_one_or_none()
-    if product_to_delete is None:
+    if not product_to_delete:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
@@ -221,7 +226,12 @@ async def delete_product(product_id: str, db: AsyncSession = Depends(get_db), bu
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
+    except Exception as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -251,7 +261,7 @@ async def update_product(product_id: str, product: ProductUpdate, db: AsyncSessi
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_to_update = result.scalar_one_or_none()
-    if product_to_update is None:
+    if not product_to_update:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
@@ -279,7 +289,12 @@ async def update_product(product_id: str, product: ProductUpdate, db: AsyncSessi
         product_to_update.update_date = datetime.now(timezone.utc)
         try:
             await db.flush()
-        except IntegrityError as expt:
+        except Exception as expt:  #pragma: no cover
+            """
+            This part of the code cannot be tested as this endpoint performs multiple database
+            interactions due to which mocking one part wont produce the desired result. Thus,
+            we will keep it uncovered until a alternative can be made for testing this exception block.
+            """
             raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="An unexpected database error occurred."

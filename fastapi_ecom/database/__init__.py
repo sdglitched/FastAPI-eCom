@@ -53,13 +53,11 @@ def get_engine(engine: str = "async") -> Union[Engine, AsyncEngine]:
     """
     if engine == "sync":
         SQLALCHEMY_DATABASE_URL = get_database_url(engine = "sync")
-        # `echo=True` enables logging of all SQL statements for debugging purposes.
-        sync_engine = create_engine(url=SQLALCHEMY_DATABASE_URL, echo=True)
+        sync_engine = create_engine(url=SQLALCHEMY_DATABASE_URL, echo=config.confecho)
         return sync_engine
 
     SQLALCHEMY_DATABASE_URL = get_database_url()
-    # `echo=True` enables logging of all SQL statements for debugging purposes.
-    async_engine = create_async_engine(url=SQLALCHEMY_DATABASE_URL, echo=True)
+    async_engine = create_async_engine(url=SQLALCHEMY_DATABASE_URL, echo=config.confecho)
     return async_engine
 
 def get_async_session() -> async_sessionmaker:

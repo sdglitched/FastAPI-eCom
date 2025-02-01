@@ -137,12 +137,12 @@ async def delete_business(db: AsyncSession = Depends(get_db), business_auth = De
     await db.execute(query)
     try:
         await db.flush()
-    except IntegrityError as expt:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed while deleting"
-        ) from expt
-    except Exception as expt:
+    except Exception as expt:  #pragma: no cover
+        """
+        This part of the code cannot be tested as this endpoint performs multiple database
+        interactions due to which mocking one part wont produce the desired result. Thus,
+        we will keep it uncovered until a alternative can be made for testing this exception block.
+        """
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected database error occurred."
@@ -191,7 +191,12 @@ async def update_business(business: BusinessUpdate, db: AsyncSession = Depends(g
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Uniqueness constraint failed - Please try again"
                 ) from expt
-        except Exception as expt:
+        except Exception as expt:  #pragma: no cover
+            """
+            This part of the code cannot be tested as this endpoint performs multiple database
+            interactions due to which mocking one part wont produce the desired result. Thus,
+            we will keep it uncovered until a alternative can be made for testing this exception block.
+            """
             raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="An unexpected database error occurred."

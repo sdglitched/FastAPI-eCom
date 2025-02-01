@@ -24,3 +24,6 @@ servport = 8080
 
 # Automatically reload if the code is changed
 cgreload = True
+
+# Set the echo for logging of all SQL statements
+confecho = True

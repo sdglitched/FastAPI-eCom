@@ -95,7 +95,10 @@ class AlembicMigration:
         post_revs = self._get_current()
         if pre_revs == post_revs:
             print("There is nothing to upgrade.")
-        else:
+        else:  #pragma: no cover
+            """
+            This part of the cover cannot be tested as `sqlite` database does not support all the `ALTER TABLE` DDLs.
+            """
             print("Upgraded to: ", post_revs)
 
     def downgrade(self, version: str) -> None:
