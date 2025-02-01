@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import AsyncGenerator, Dict
+from typing import Dict
 from uuid import UUID
 
 import pytest
@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.utils.auth import security
 
@@ -46,8 +45,9 @@ from fastapi_ecom.utils.auth import security
 async def test_create_order(
         test_app: FastAPI,
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         mocker: MockerFixture,
         payload: Dict,
         present: bool
@@ -57,6 +57,7 @@ async def test_create_order(
 
     :param test_app: The fixture which returns the FastAPI app instance.
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: The mocker fixture of `pytest_mock`.

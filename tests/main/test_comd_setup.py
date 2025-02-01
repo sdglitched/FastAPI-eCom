@@ -1,13 +1,10 @@
 from pathlib import PosixPath
-from typing import AsyncGenerator
 
 import pytest
 from click.testing import CliRunner
 from pytest_mock import MockerFixture
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_ecom.database.db_setup import make_database
 from fastapi_ecom.main import main
 
 
@@ -19,7 +16,7 @@ from fastapi_ecom.main import main
 )
 def test_comd_setup(
         runner: CliRunner,
-        db_test_data: AsyncGenerator[AsyncSession, None],
+        get_test_database_url: URL,
         tmp_path: PosixPath,
         mocker: MockerFixture,
         cmd: str,
@@ -29,7 +26,7 @@ def test_comd_setup(
     Test the functionality cli `setup` command.
 
     :param runner: Fixture to invoke CLI commands programmatically.
-    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param get_test_database_url: The fixture which generates test database URL.
     :param tmp_path: Inbuilt fixture which provides temporary directory.
     :param mocker: Mock fixture to be used for mocking desired functionality.
     :param cmd: The command to test.
@@ -37,15 +34,20 @@ def test_comd_setup(
 
     :return:
     """
+    """
+    Mock database URL to ensure the CLI command uses sync database driver
+    """
     SQLALCHEMY_DATABASE_URL = URL.create(
         drivername="sqlite",
         database=f"{tmp_path.as_posix()}/eCom.db",
     )
 
     mocker.patch("fastapi_ecom.database.db_setup.get_database_url", return_value=SQLALCHEMY_DATABASE_URL)
-    mocker.patch("fastapi_ecom.database.baseobjc.metadata.create_all")  # Mock the unwanted creation of tables in test database
 
-    make_database()
+    """
+    Mock the unwanted creation of tables in test database
+    """
+    mocker.patch("fastapi_ecom.database.baseobjc.metadata.create_all")
 
     """
     Perform the action of invoking CLI command

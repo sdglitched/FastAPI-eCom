@@ -1,43 +1,43 @@
-from typing import AsyncGenerator
 
 import pytest
 from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.utils.auth import security
 from tests.order import _test_data_order_details, _test_data_orders
 
 
 @pytest.mark.parametrize(
-    "customer_id, present",
+    "order_id, present",
     [
-        pytest.param("2b203687", True, id="ORDER GET Endpoint - Fetch all the orders of authenticated customer"),
-        pytest.param("b73a7a28", False, id="ORDER GET Endpoint - Fail to fetch orders of authenticated customer")
+        pytest.param("2b203687", True, id="ORDER GET Endpoint - Fetch all the orders of authenticated order"),
+        pytest.param("b73a7a28", False, id="ORDER GET Endpoint - Fail to fetch orders of authenticated order")
     ]
 )
 async def test_get_orders(
         test_app: FastAPI,
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         mocker: MockerFixture,
-        customer_id: str,
+        order_id: str,
         present: str
 ) -> None:
     """
-    Test the `get` endpoint for fetching all the order of the authenticated customer of the Order
+    Test the `get` endpoint for fetching all the order of the authenticated order of the Order
     API.
 
     :param test_app: The fixture which returns the FastAPI app instance.
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: The mocker fixture of `pytest_mock`.
-    :param customer_id: The UUID of customer to fetch the orders from.
-    :param present: A boolean indicating presence of orders for the authenticated customer.
+    :param order_id: The UUID of order to fetch the orders from.
+    :param present: A boolean indicating presence of orders for the authenticated order.
 
     :return:
     """
@@ -48,7 +48,7 @@ async def test_get_orders(
     order_details = _test_data_order_details()
     orders = []
     for ord in ords.values():
-        if ord.user_id == customer_id:  #UUID of the default customer account which is used for testing
+        if ord.user_id == order_id:  #UUID of the default order account which is used for testing
             order_items = [
                 {
                     "product_id": detail.product_id,
@@ -100,13 +100,15 @@ async def test_get_orders(
 )
 async def test_get_orders_internal(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
+        db_test_create: None,
+        db_test_data: None,
         _: None
 ) -> None:
     """
     Test the `get` endpoint for fetching all the orders of the Order API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
 
     :return:
@@ -152,16 +154,45 @@ async def test_get_orders_internal(
     }
 
 @pytest.mark.parametrize(
+    "_",
+    [
+        pytest.param(None, id="ORDER GET Endpoint - Fail to fetch order")
+    ]
+)
+async def test_get_orders_internal_fail(
+    client: AsyncClient,
+    db_test_create: None,
+    _: None,
+) -> None:
+    """
+    Test the `get` endpoint for fetching no records from database of the Order API.
+
+    :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
+
+    :return:
+    """
+
+    """
+    Perform the action of visiting the endpoint
+    """
+    response = await client.get("/api/v1/order/search/internal")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No orders in database"
+
+@pytest.mark.parametrize(
     "order_id, present",
     [
-        pytest.param("375339b1", True, id="ORDER GET Endpoint - Fetch the specified order of the authenticated customer"),
-        pytest.param("xxxx1111", False, id="ORDER GET Endpoint - Fail to fetch the specified order of the authenticated customer")
+        pytest.param("375339b1", True, id="ORDER GET Endpoint - Fetch the specified order of the authenticated order"),
+        pytest.param("xxxx1111", False, id="ORDER GET Endpoint - Fail to fetch the specified order of the authenticated order")
     ]
 )
 async def test_get_order_by_uuid(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         order_id: str,
         present: str
 ) -> None:
@@ -169,10 +200,11 @@ async def test_get_order_by_uuid(
     Test the `get` endpoint for fetching all the orders of the Order API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param order_id: The UUID of the specific order.
-    :param present: A boolean indicating presence of orders for the authenticated customer.
+    :param present: A boolean indicating presence of orders for the authenticated order.
 
     :return:
     """

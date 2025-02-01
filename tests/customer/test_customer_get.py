@@ -1,9 +1,7 @@
-from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.customer import _test_data_customer
 
@@ -16,14 +14,16 @@ from tests.customer import _test_data_customer
 )
 async def test_get_customer_me(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         _: None
 ) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
 
@@ -56,8 +56,9 @@ async def test_get_customer_me(
 )
 async def test_get_customer_me_fail(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         mocker: MockerFixture,
         _: None
 ) -> None:
@@ -65,6 +66,7 @@ async def test_get_customer_me_fail(
     Test the `get` endpoint for the incorrectly authenticated customer of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param mocker: Mock fixture to be used for mocking desired functionality
@@ -95,12 +97,14 @@ async def test_get_customer_me_fail(
 )
 async def test_get_customers(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
+        db_test_create: None,
+        db_test_data: None,
         _: None) -> None:
     """
     Test the `get` endpoint for fetching all the customers of the Customer API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
 
     :return:
@@ -140,10 +144,24 @@ async def test_get_customers(
         pytest.param(None, id="CUSTOMER GET Endpoint - Fail to fetch customer")
     ]
 )
-async def test_get_customers_fail(_: None) -> None:
+async def test_get_customers_fail(
+    client: AsyncClient,
+    db_test_create: None,
+    _: None,
+) -> None:
     """
-    TODO: Test the `get` endpoint for fetching no records from database of the Customer API.
+    Test the `get` endpoint for fetching no records from database of the Customer API.
+
+    :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
 
     :return:
     """
-    pass
+
+    """
+    Perform the action of visiting the endpoint
+    """
+    response = await client.get("/api/v1/customer/search")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No customer present in database"

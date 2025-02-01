@@ -1,8 +1,6 @@
-from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.product import _test_data_product
 
@@ -16,8 +14,9 @@ from tests.product import _test_data_product
 )
 async def test_delete_product(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         business_id: str,
         product_id: str,
         present: bool
@@ -27,6 +26,7 @@ async def test_delete_product(
     business of the Product API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param business_id: UUID of the business whose product to delete.

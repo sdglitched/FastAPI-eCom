@@ -54,7 +54,7 @@ async def verify_business_cred(credentials: HTTPBasicCredentials = Depends(secur
     query = select(Business).where(Business.email == credentials.username).options(selectinload("*"))
     result = await db.execute(query)
     business_by_email = result.scalar_one_or_none()
-    if business_by_email is None or not bcrypt.checkpw(credentials.password.encode('utf-8'), business_by_email.password.encode('utf-8')):
+    if not business_by_email or not bcrypt.checkpw(credentials.password.encode('utf-8'), business_by_email.password.encode('utf-8')):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail = "Invalid authentication credentials",

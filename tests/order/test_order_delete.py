@@ -1,8 +1,6 @@
-from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.order import _test_data_order_details, _test_data_orders
 
@@ -16,8 +14,9 @@ from tests.order import _test_data_order_details, _test_data_orders
 )
 async def test_delete_order(
         client: AsyncClient,
-        db_test_data: AsyncGenerator[AsyncSession, None],
-        apply_security_override,
+        db_test_create: None,
+        db_test_data: None,
+        apply_security_override: None,
         order_id: str,
         present: str
 ) -> None:
@@ -25,6 +24,7 @@ async def test_delete_order(
     Test the `delete` endpoint for deleting a specified order of the Order API.
 
     :param client: The test client to send HTTP requests.
+    :param db_test_create: Fixture which creates a test database.
     :param db_test_data: Fixture to populate the test database with initial test data.
     :param apply_security_override: Fixture to set up test client with dependency override for `security`.
     :param order_id: The UUID of the specific order.

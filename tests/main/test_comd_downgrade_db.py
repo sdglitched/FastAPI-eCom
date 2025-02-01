@@ -1,10 +1,8 @@
-from typing import AsyncGenerator
 
 import pytest
 from alembic import command, config
 from click.testing import CliRunner
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_ecom.main import main
 from tests import _alempath
@@ -19,7 +17,7 @@ from tests import _alempath
 )
 def test_comd_downgrade_db(
         runner: CliRunner,
-        db_test_data: AsyncGenerator[AsyncSession, None],
+        db_test_create: None,
         get_test_database_url: URL,
         cmd: str,
         revision: str,
@@ -29,7 +27,7 @@ def test_comd_downgrade_db(
     Test the functionality cli `downgrade-db` command.
 
     :param runner: Fixture to invoke CLI commands programmatically.
-    :param db_test_data: Fixture to populate the test database with initial test data.
+    :param db_test_create: Fixture which creates a test database.
     :param get_test_database_url: The fixture which generates test database URL.
     :param cmd: The command to test.
     :param revision: The target database version to downgrade to.
