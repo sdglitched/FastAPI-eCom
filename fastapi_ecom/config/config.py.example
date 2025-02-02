@@ -1,11 +1,11 @@
 # The database name
-database = ""
+database = "test_db"
 
 # The username for the database user
-username = ""
+username = "test_user"
 
 # The password for the database user
-password = ""
+password = "test_pwd"
 
 # The location of serving the database service
 dtbsbhost = "localhost"
