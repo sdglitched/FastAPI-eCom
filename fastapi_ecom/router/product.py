@@ -24,7 +24,11 @@ from fastapi_ecom.utils.auth import verify_business_cred
 router = APIRouter(prefix="/product")
 
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=ProductResultInternal, tags=["product"])
-async def add_product(product: ProductCreate, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+async def add_product(
+    product: ProductCreate,
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> ProductResultInternal:
     """
     Endpoint to add a new product by currently authenticated business.
 
@@ -121,7 +125,9 @@ async def get_product_by_text(
     :raises HTTPException:
         If no matching products exists in the database, it raises 404 Not Found.
     """
-    query = select(Product).where(or_(Product.name.ilike(f"%{text}%"), Product.description.ilike(f"%{text}%"))).options(selectinload("*")).offset(skip).limit(limit)
+    query = select(Product).where(
+        or_(Product.name.ilike(f"%{text}%"), Product.description.ilike(f"%{text}%"))
+    ).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
@@ -169,7 +175,11 @@ async def get_products_internal(
     }
 
 @router.get("/search/uuid/{product_id}", status_code=status.HTTP_200_OK, response_model=ProductResultInternal, tags=["product"])
-async def get_product_by_uuid(product_id: str, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+async def get_product_by_uuid(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> ProductResultInternal:
     """
     Endpoint fetches a specific product by its UUID associated with the authenticated business.
 
@@ -198,7 +208,11 @@ async def get_product_by_uuid(product_id: str, db: AsyncSession = Depends(get_db
     }
 
 @router.delete("/delete/uuid/{product_id}", status_code=status.HTTP_202_ACCEPTED, response_model=ProductResultInternal, tags=["product"])
-async def delete_product(product_id: str, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+async def delete_product(
+    product_id: str,
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> ProductResultInternal:
     """
     Endpoint to delete a product by its UUID associated for an authenticated business.
 
@@ -242,7 +256,12 @@ async def delete_product(product_id: str, db: AsyncSession = Depends(get_db), bu
     }
 
 @router.put("/update/uuid/{product_id}", status_code=status.HTTP_202_ACCEPTED, response_model=ProductResultInternal, tags=["product"])
-async def update_product(product_id: str, product: ProductUpdate, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> ProductResultInternal:
+async def update_product(
+    product_id: str,
+    product: ProductUpdate,
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> ProductResultInternal:
     """
     Endpoint to update a product by its UUID associated for an authenticated business.
 

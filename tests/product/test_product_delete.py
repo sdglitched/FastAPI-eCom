@@ -8,8 +8,14 @@ from tests.product import _test_data_product
 @pytest.mark.parametrize(
     "business_id, product_id, present",
     [
-        pytest.param("5c1c48fb", "d5cf6983", True, id="PRODUCT DELETE Endpoint - Deletes the specific product of currently authenticated business"),
-        pytest.param("5c1c48fb", "d76a11f2", False, id="PRODUCT DELETE Endpoint - Fails to find the specific product of currently authenticated business"),
+        pytest.param(
+            "5c1c48fb", "d5cf6983", True,
+            id="PRODUCT DELETE Endpoint - Deletes the specific product of currently authenticated business"
+        ),
+        pytest.param(
+            "5c1c48fb", "d76a11f2", False,
+            id="PRODUCT DELETE Endpoint - Fails to find the specific product of currently authenticated business"
+        ),
     ]
 )
 async def test_delete_product(

@@ -15,7 +15,7 @@ from tests.product import _test_data_product
                 "name": "Updated Test Product",
                 "description": "Updated Fifth Test Product",
                 "category": "updated test",
-                "mfg_date": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),#"1900-01-01 00:00:00+00:00",
+                "mfg_date": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "exp_date": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "price": 1950.05
             },
