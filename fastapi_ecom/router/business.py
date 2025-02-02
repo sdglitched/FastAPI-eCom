@@ -153,7 +153,11 @@ async def delete_business(db: AsyncSession = Depends(get_db), business_auth = De
     }
 
 @router.put("/update/me", status_code=status.HTTP_202_ACCEPTED, response_model=BusinessResult, tags=["business"])
-async def update_business(business: BusinessUpdate, db: AsyncSession = Depends(get_db), business_auth = Depends(verify_business_cred)) -> BusinessResult:
+async def update_business(
+    business: BusinessUpdate,
+    db: AsyncSession = Depends(get_db),
+    business_auth = Depends(verify_business_cred)
+) -> BusinessResult:
     """
     Endpoint for an authenticated business to update its own record.
 

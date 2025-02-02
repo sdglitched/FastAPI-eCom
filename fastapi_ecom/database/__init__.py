@@ -10,6 +10,9 @@ from fastapi_ecom.config import config
 # Base class for ORM models, to be used with SQLAlchemy's declarative system.
 baseobjc = declarative_base()
 
+# Path of alembic configuration file
+alempath = str(Path(str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve()),"alembic.ini").resolve())
+
 # Migration path for alembic configuration
 migrpath = str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve())
 

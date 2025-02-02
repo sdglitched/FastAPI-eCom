@@ -229,8 +229,14 @@ async def test_get_products_internal(
 @pytest.mark.parametrize(
     "business_id, product_id, present",
     [
-        pytest.param("d76a11f2", "3250fcbe", True, id="PRODUCT GET Endpoint - Fetch specific product by its UUID which is associated with the authenticated business"),
-        pytest.param("d76a11f2", "xxxxyyyy", False, id="PRODUCT GET Endpoint - Fail to fetch specific product by its UUID which is associated with the authenticated business")
+        pytest.param(
+            "d76a11f2", "3250fcbe", True,
+            id="PRODUCT GET Endpoint - Fetch specific product by its UUID which is associated with the authenticated business"
+        ),
+        pytest.param(
+            "d76a11f2", "xxxxyyyy", False,
+            id="PRODUCT GET Endpoint - Fail to fetch specific product by its UUID which is associated with the authenticated business"
+        )
     ]
 )
 async def test_get_product_by_uuid(

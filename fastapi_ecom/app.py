@@ -10,7 +10,7 @@ from fastapi_ecom.router import business, customer, order, product
 tags_metadata = [
     {"name": "business", "description": "Operations on businesses"},
     {"name": "product", "description": "Operations on products"},
-    {"name": "customer", "description": "Operations on customeres"},
+    {"name": "customer", "description": "Operations on customers"},
     {"name": "order", "description": "Operations on orders"}
 ]
 

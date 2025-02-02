@@ -1,10 +1,10 @@
-from pathlib import Path
 from typing import AsyncGenerator
 
 from alembic import command, config
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_ecom.database import (  #noqa: F401
+from fastapi_ecom.database import (  # noqa: F401
+    alempath,
     baseobjc,
     get_async_session,
     get_database_url,
@@ -28,7 +28,7 @@ def make_database() -> None:
     baseobjc.metadata.create_all(bind=sync_engine)
 
     # Set up Alembic configuration for migration management.
-    alembic_config = config.Config(str(Path(str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve()),"alembic.ini").resolve()))
+    alembic_config = config.Config(alempath)
     alembic_config.set_main_option("script_location", migrpath)
     alembic_config.set_main_option("sqlalchemy.url", get_database_url().render_as_string(hide_password=False))
 

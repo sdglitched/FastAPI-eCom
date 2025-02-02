@@ -27,15 +27,15 @@ aiosqlite = "^0.20.0"
 pytest-mock = "^3.14.0"
 
 [tool.ruff]
-line-length = 100
+line-length = 150
 fix = true
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "S", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
-"fastapi_ecom/*" = ["E501", "B008"]
-"tests/*" = ["S101", "S106", "E501"]
+"fastapi_ecom/*" = ["B008"]
+"tests/*" = ["S101", "S106",]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

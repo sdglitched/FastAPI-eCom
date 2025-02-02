@@ -104,16 +104,16 @@ This project serves as a strong foundation for developers to build upon.
    (venv) $ mv fastapi_ecom/config/config.py.example config.py
    (venv) $ nano fastapi_ecom/config/config.py
    ```
-   Change the variables as per your requirement
-   `database` = `<DATABASE-NAME>` as mentioned while setting up the database container.
-   `username` = `<DATABASE-USER>` as mentioned while setting up the database container.
-   `password` = `<DATABASE-PASSWORD>` as mentioned while setting up the database container.
-   `dtbsbhost` = `<HOST>` as mentioned while setting up the database container.
-   `dtbsbport` = `<PORT>` as mentioned while setting up the database container.
-   `dtbsdriver` = `postgresql+asyncpg` if async database driver to be used or `postgresql+psycopg2` is sync database driver to be used.
-   `servhost` = `127.0.0.1` if the service is intended to be accessible only on the same device.
-   `servport` = `8080` if the service is intended to be accessible on the port number `8080` or `[1-65535]` depending on your choice.
-   `cgreload` = `True` for use in development environments to which automatically reload the unvicorn service.
+   Change the variables as per your requirement  
+   `database` = `<DATABASE-NAME>` as mentioned while setting up the database container.  
+   `username` = `<DATABASE-USER>` as mentioned while setting up the database container.  
+   `password` = `<DATABASE-PASSWORD>` as mentioned while setting up the database container.  
+   `dtbsbhost` = `<HOST>` as mentioned while setting up the database container.  
+   `dtbsbport` = `<PORT>` as mentioned while setting up the database container.  
+   `dtbsdriver` = `postgresql+asyncpg` if async database driver to be used or `postgresql+psycopg2` is sync database driver to be used.  
+   `servhost` = `127.0.0.1` if the service is intended to be accessible only on the same device.  
+   `servport` = `8080` if the service is intended to be accessible on the port number `8080` or `[1-65535]` depending on your choice.  
+   `cgreload` = `True` for use in development environments to which automatically reload the uvicorn service.  
    Command
    ```shell
    (venv) $ mv fastapi_ecom/migrations/alembic.ini.example fastapi_ecom/migrations/alembic.ini
@@ -446,10 +446,10 @@ This project serves as a strong foundation for developers to build upon.
 2. Business Route  
    This route contains endpoints for performing CRUD operations on business entity.  
    `create`: Endpoint to create a new business account. No authentication is needed for connecting to this endpoint.  
-   `me`: It is a endpoint to fetch the email of the currently authenticated business.  
+   `me`: It is an endpoint to fetch the email of the currently authenticated business.  
    `search`: Endpoint to fetch a paginated list of businesses from the database. No authentication is needed for connecting to this endpoint.  
    `delete`: Endpoint for an authenticated business to delete its own record.  
-   _Note:_ This endpoint will be depricated in future update with the implementation of archiving.  
+   _Note:_ This endpoint will be deprecated in future update with the implementation of archiving.  
    `update`: Endpoint for an authenticated business to update its own record.  
    ![](https://raw.githubusercontent.com/sdglitched/FastAPI-eCom/main/docs/imgs/business_enpt.png)  
 3. Product Route  
@@ -460,13 +460,13 @@ This project serves as a strong foundation for developers to build upon.
    `search/internal`: Endpoint fetches a paginated list of products associated with the authenticated business.  
    `search/uuid`: Endpoint fetches a specific product by its UUID (Product ID) associated with the authenticated business.  
    `delete/uuid`: Endpoint to delete a product by its UUID associated for an authenticated business.  
-   _Note:_ This endpoint will be depricated in future update with the implementation of archiving.  
+   _Note:_ This endpoint will be deprecated in future update with the implementation of archiving.  
    `update/uuid`: Endpoint to update a product by its UUID associated for an authenticated business.  
    ![](https://raw.githubusercontent.com/sdglitched/FastAPI-eCom/main/docs/imgs/product_enpt.png)  
 4. Customer Route  
    This route contains endpoints for performing CRUD operations on customer entity.  
    `create`: Endpoint to create a new customer account. No authentication is needed for connecting to this endpoint.  
-   `me`: It is a endpoint to fetch the email of the currently authenticated customer.  
+   `me`: It is an endpoint to fetch the email of the currently authenticated customer.  
    `search`: Endpoint to fetch a paginated list of customers from the database. No authentication is needed for connecting to this endpoint.  
    `delete`: Endpoint for an authenticated customer to delete its own record.  
    `update`: Endpoint for an authenticated customer to update its own record.  
@@ -476,10 +476,10 @@ This project serves as a strong foundation for developers to build upon.
    `create`: Endpoint to place an order by the authenticated customer.  
    `search`: Endpoint fetches a paginated list of orders and its details associated with the authenticated customer.  
    `search/internal`: Endpoint fetches a paginated list of orders and its details.  
-   _Note:_ This endpoint is ment to be used by an admin account which will created in future update. Currently no authentication is needed for connecting to this endpoint.  
+   _Note:_ This endpoint is ment to be used by an admin account which will created in future update. Currently, no authentication is needed for connecting to this endpoint.  
    `search/uuid`: Endpoint fetches a specific order and its details by its UUID associated with the authenticated customer.  
-   `delete/uuid`: Endpoint to delete a order by its UUID associated for an authenticated customer.  
-   _Note:_ This endpoint will be depricated in future update with the implementation of archiving.  
+   `delete/uuid`: Endpoint to delete an order by its UUID associated for an authenticated customer.  
+   _Note:_ This endpoint will be deprecated in future update with the implementation of archiving.  
    ![](https://raw.githubusercontent.com/sdglitched/FastAPI-eCom/main/docs/imgs/order_enpt.png)  
 
 ## Future Roadmap
