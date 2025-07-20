@@ -1,32 +1,34 @@
 ---
 name: Checking code quality
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-
   ci-qlty:
-
     runs-on: ubuntu-latest
 
     container: fedorapython/fedora-python-tox:latest
 
     strategy:
       fail-fast: false
+      matrix:
+        tox-env: ["py312","py313"]
 
     steps:
-
       - name: Checkout the codebase current state
         uses: actions/checkout@v4
 
       - name: Install the base dependencies
-        run: |
-             python3 -m pip install --upgrade poetry tox
+        run: python3 -m pip install --upgrade poetry tox
 
       - name: Check the correctness of the project config
-        run: |
-             poetry check
+        run: poetry check
 
       - name: Check the quality of the code
-        run: |
-             tox -e cleaning
+        run: tox -e cleaning

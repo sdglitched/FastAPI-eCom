@@ -1,5 +1,3 @@
-from typing import Dict
-
 import uvicorn
 from fastapi import FastAPI
 
@@ -25,7 +23,7 @@ app = FastAPI(
 PREFIX = "/api/v1"
 
 @app.get("/")
-def root() -> Dict[str, str]:
+def root() -> dict[str, str]:
     """
     Root endpoint of the FastAPI application.
 

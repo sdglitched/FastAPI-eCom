@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -117,7 +117,7 @@ class ProductManyResult(APIResult):
 
     :ivar products: List of products with detailed information.
     """
-    products: List[ProductView] = []
+    products: list[ProductView] = []
 
 
 class ProductManyResultInternal(APIResult):
@@ -126,4 +126,4 @@ class ProductManyResultInternal(APIResult):
 
     :ivar products: List of products with detailed internal information.
     """
-    products: List[ProductViewInternal] = []
+    products: list[ProductViewInternal] = []

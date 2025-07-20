@@ -1,5 +1,6 @@
+from collections.abc import AsyncGenerator
 from pathlib import PosixPath
-from typing import AsyncGenerator, Callable
+from typing import Callable
 
 import pytest
 from click.testing import CliRunner

@@ -1,4 +1,3 @@
-from typing import Dict
 from uuid import UUID
 
 import pytest
@@ -33,7 +32,7 @@ async def test_create_product(
         db_test_data: None,
         apply_security_override: None,
         mocker: MockerFixture,
-        payload: Dict[str, str]
+        payload: dict[str, str]
 ) -> None:
     """
     Test the `create` endpoint of the Product API.

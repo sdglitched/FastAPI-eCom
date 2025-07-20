@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Dict
 from uuid import uuid4
 
 import bcrypt
@@ -70,7 +69,7 @@ async def create_business(business: BusinessCreate, db: AsyncSession = Depends(g
     }
 
 @router.get("/me", status_code=status.HTTP_200_OK, tags=["business"])
-async def get_business_me(business_auth = Depends(verify_business_cred)) -> Dict[str, str]:
+async def get_business_me(business_auth = Depends(verify_business_cred)) -> dict[str, str]:
     """
     Endpoint to fetch the email of the currently authenticated business.
 
