@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel
 
@@ -35,7 +34,7 @@ class OrderCreate(OrderBase):
     :ivar order_items: List of order details, including product information and quantity.
     """
     order_date: datetime
-    order_items: List[OrderDetailsCreate]
+    order_items: list[OrderDetailsCreate]
 
 
 class OrderView(OrderCreate):
@@ -49,7 +48,7 @@ class OrderView(OrderCreate):
     """
     uuid: str
     total_price: float
-    order_items: List[OrderDetailsView]
+    order_items: list[OrderDetailsView]
 
 
 class OrderViewInternal(OrderView):
@@ -62,11 +61,11 @@ class OrderViewInternal(OrderView):
                        identifiers.
     """
     user_id: str
-    order_items: List[OrderDetailsViewInternal]
+    order_items: list[OrderDetailsViewInternal]
 
 
 # class OrderUpdate(BaseModel):
-#     order_items: Optional[List[OrderDetailsUpdate]]
+#     order_items: Optional[list[OrderDetailsUpdate]]
 
 
 class OrderResult(APIResult):
@@ -93,7 +92,7 @@ class OrderManyResult(APIResult):
 
     :ivar orders: List of orders with detailed information.
     """
-    orders: List[OrderView] = []
+    orders: list[OrderView] = []
 
 
 class OrderManyResultInternal(APIResult):
@@ -102,4 +101,4 @@ class OrderManyResultInternal(APIResult):
 
     :ivar orders: List of orders with detailed internal information.
     """
-    orders: List[OrderViewInternal] = []
+    orders: list[OrderViewInternal] = []

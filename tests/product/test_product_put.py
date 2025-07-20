@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Dict
 
 import pytest
 from httpx import AsyncClient
@@ -45,7 +44,7 @@ async def test_update_product(
         db_test_create: None,
         db_test_data: None,
         apply_security_override: None,
-        payload: Dict[str, str],
+        payload: dict[str, str],
         business_id: str,
         product_id: str,
         present: bool

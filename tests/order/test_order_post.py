@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict
 from uuid import UUID
 
 import pytest
@@ -49,7 +48,7 @@ async def test_create_order(
         db_test_data: None,
         apply_security_override: None,
         mocker: MockerFixture,
-        payload: Dict,
+        payload: dict,
         present: bool
 ) -> None:
     """

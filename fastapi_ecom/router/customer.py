@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Dict
 from uuid import uuid4
 
 import bcrypt
@@ -70,7 +69,7 @@ async def create_customer(customer: CustomerCreate, db: AsyncSession = Depends(g
     }
 
 @router.get("/me", status_code=status.HTTP_200_OK, tags=["customer"])
-async def get_customer_me(customer_auth = Depends(verify_cust_cred)) -> Dict[str, str]:
+async def get_customer_me(customer_auth = Depends(verify_cust_cred)) -> dict[str, str]:
     """
     Endpoint to fetch the email of the currently authenticated customer.
 

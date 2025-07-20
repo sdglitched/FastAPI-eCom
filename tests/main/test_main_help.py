@@ -1,4 +1,3 @@
-from typing import List
 
 import pytest
 from click.testing import CliRunner
@@ -100,7 +99,7 @@ def test_main_help(
         runner: CliRunner,
         cmd: str,
         code: int,
-        output: List[str]
+        output: list[str]
 ) -> None:
     """
     Test the basic cli help functionality.

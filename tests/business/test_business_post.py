@@ -1,4 +1,3 @@
-from typing import Dict
 
 import pytest
 from fastapi import HTTPException, status
@@ -42,7 +41,7 @@ async def test_create_business(
         client: AsyncClient,
         db_test_create: None,
         db_test_data: None,
-        payload: Dict[str, str],
+        payload: dict[str, str],
         type: str
 ) -> None:
     """
@@ -103,7 +102,7 @@ async def test_create_business_fail(
     client: AsyncClient,
     get_test_database_url: URL,
     mocker: MockerFixture,
-    payload: Dict[str, str]
+    payload: dict[str, str]
 ) -> None:
     """
     Test the `create` endpoint of the Business API for HTTP_500_INTERNAL_SERVER_ERROR.

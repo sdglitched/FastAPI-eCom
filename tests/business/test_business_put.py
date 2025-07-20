@@ -1,4 +1,3 @@
-from typing import Dict
 
 import pytest
 from httpx import AsyncClient
@@ -40,7 +39,7 @@ async def test_update_business(
         db_test_create: None,
         db_test_data: None,
         apply_security_override: None,
-        payload: Dict[str, str],
+        payload: dict[str, str],
         type: str
 ) -> None:
     """

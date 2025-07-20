@@ -1,4 +1,3 @@
-from typing import List, Set
 
 from alembic import command, config, runtime, script
 
@@ -39,7 +38,7 @@ class AlembicMigration:
         """
         command.revision(config=self.config, message=comment, autogenerate=autogenerate)
 
-    def _get_current(self) -> Set[str]:
+    def _get_current(self) -> set[str]:
         """
         Retrieve the current database revision(s).
 
@@ -49,7 +48,7 @@ class AlembicMigration:
 
         curtrevs = set()
 
-        def _get_rev_current(rev: str, context: object) -> List:
+        def _get_rev_current(rev: str, context: object) -> list:
             """
             Callback function to retrieve the current revision(s) during the migration check.
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -103,4 +103,4 @@ class BusinessManyResult(APIResult):
 
     :ivar businesses: List of businesses with their details.
     """
-    businesses: List[BusinessView] = []
+    businesses: list[BusinessView] = []

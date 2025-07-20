@@ -1,11 +1,10 @@
 from datetime import datetime, timezone
-from typing import Dict
 
 from fastapi_ecom.database.models.order import Order
 from fastapi_ecom.database.models.order_details import OrderDetail
 
 
-def _test_data_orders() -> Dict[str, Order]:
+def _test_data_orders() -> dict[str, Order]:
     """
     Provides test data for testing the order endpoint.
 
@@ -27,7 +26,7 @@ def _test_data_orders() -> Dict[str, Order]:
     }
     return data
 
-def _test_data_order_details() -> Dict[str, OrderDetail]:
+def _test_data_order_details() -> dict[str, OrderDetail]:
     """
     Provides test data for testing the order endpoint.
 

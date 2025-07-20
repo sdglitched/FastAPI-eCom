@@ -1,9 +1,7 @@
-from typing import Dict
-
 from fastapi_ecom.database.models.customer import Customer
 
 
-def _test_data_customer() -> Dict[str, Customer]:
+def _test_data_customer() -> dict[str, Customer]:
     """
     Provides test data for testing the customer endpoint.
 

@@ -1,10 +1,9 @@
 from datetime import datetime, timezone
-from typing import Dict
 
 from fastapi_ecom.database.models.product import Product
 
 
-def _test_data_product() -> Dict[str, Product]:
+def _test_data_product() -> dict[str, Product]:
     """
     Provides test data for testing the product endpoint.
 
