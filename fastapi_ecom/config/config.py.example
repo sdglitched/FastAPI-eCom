@@ -16,6 +16,9 @@ dtbsbport = "5432"
 # The driver used to access the database
 dtbsdriver = "postgresql+asyncpg"
 
+# Set the echo for logging of all SQL statements
+confecho = True
+
 # The location of serving the application service
 servhost = "127.0.0.1"
 
@@ -25,5 +28,8 @@ servport = 8080
 # Automatically reload if the code is changed
 cgreload = True
 
-# Set the echo for logging of all SQL statements
-confecho = True
+# Google client id
+GOOGLE_CLIENT_ID = "example.apps.googleusercontent.com"
+
+# Google Client secret
+GOOGLE_CLIENT_SECRET = "example"
