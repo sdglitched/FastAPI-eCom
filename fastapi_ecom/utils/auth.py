@@ -1,64 +1,67 @@
-import bcrypt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from typing import Optional
 
-from fastapi_ecom.database.db_setup import get_db
+from fastapi import Depends, HTTPException, status
+
 from fastapi_ecom.database.models.business import Business
 from fastapi_ecom.database.models.customer import Customer
+from fastapi_ecom.utils.basic_auth import verify_basic_business_cred, verify_basic_customer_cred
+from fastapi_ecom.utils.oauth import verify_oauth_business_cred, verify_oauth_customer_cred
 
-# Initialize HTTP Basic Authentication.
-# This will prompt users for a username and password when accessing secured endpoints.
-security = HTTPBasic()
 
-async def verify_cust_cred(credentials: HTTPBasicCredentials = Depends(security), db: AsyncSession = Depends(get_db)) -> Customer:
+async def verify_cust_cred(
+    basic_customer: Optional[Customer] = Depends(verify_basic_customer_cred),
+    oauth_customer: Optional[Customer] = Depends(verify_oauth_customer_cred)
+) -> Customer:
     """
-    Verify customer credentials using HTTP Basic Authentication.
-    This function retrieves the customer record from the database using the provided username
-    (email address) and verifies the provided password against the stored hashed password.
+    Verify customer credentials using either HTTP Basic Authentication or OAuth.
 
-    :param credentials: HTTPBasicCredentials containing the username and password.
-    :param db: Database session to query customer data.
+    This function attempts to authenticate a customer using multiple authentication
+    methods. It first tries HTTP Basic Authentication, then falls back to OAuth
+    authentication if basic auth is not provided or fails.
 
-    :return: The customer object if authentication is successful.
+    :param basic_customer: Customer object from HTTP Basic Authentication or None.
+    :param oauth_customer: Customer object from OAuth authentication or None.
 
-    :raises HTTPException: If the username or password is incorrect.
+    :return: The authenticated customer object.
+
+    :raises HTTPException: If neither authentication method succeeds.
     """
-    query = select(Customer).where(Customer.email == credentials.username).options(selectinload("*"))
-    result = await db.execute(query)
-    customer_by_email = result.scalar_one_or_none()
-    if not customer_by_email or not bcrypt.checkpw(credentials.password.encode('utf-8'), customer_by_email.password.encode('utf-8')):
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Invalid authentication credentials",
-            headers = {"WWW-Authenticate": "Basic"},
-        )
-    else:
-        return customer_by_email
+    if basic_customer:
+        return basic_customer
 
-async def verify_business_cred(credentials: HTTPBasicCredentials = Depends(security), db: AsyncSession = Depends(get_db)) -> Business:
+    if oauth_customer:
+        return oauth_customer
+
+    raise HTTPException(
+        status_code = status.HTTP_401_UNAUTHORIZED,
+        detail = "Not Authenticated",
+    )
+
+async def verify_business_cred(
+    basic_business: Optional[Business] = Depends(verify_basic_business_cred),
+    oauth_business: Optional[Business] = Depends(verify_oauth_business_cred)
+) -> Business:
     """
-    Verify business credentials using HTTP Basic Authentication.
-    This function retrieves the business record from the database using the provided username
-    (email address) and verifies the provided password against the stored hashed password.
+    Verify business credentials using either HTTP Basic Authentication or OAuth.
 
-    :param credentials: HTTPBasicCredentials containing the username and password.
-    :param db: Database session to query business data.
+    This function attempts to authenticate a business using multiple authentication
+    methods. It first tries HTTP Basic Authentication, then falls back to OAuth
+    authentication if basic auth is not provided or fails.
 
-    :return: The business object if authentication is successful.
+    :param basic_business: Business object from HTTP Basic Authentication or None.
+    :param oauth_business: Business object from OAuth authentication or None.
 
-    :raises HTTPException: If the username or password is incorrect.
+    :return: The authenticated business object.
+
+    :raises HTTPException: If neither authentication method succeeds.
     """
-    query = select(Business).where(Business.email == credentials.username).options(selectinload("*"))
-    result = await db.execute(query)
-    business_by_email = result.scalar_one_or_none()
-    if not business_by_email or not bcrypt.checkpw(credentials.password.encode('utf-8'), business_by_email.password.encode('utf-8')):
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Invalid authentication credentials",
-            headers = {"WWW-Authenticate": "Basic"},
-        )
-    else:
-        return business_by_email
+    if basic_business:
+        return basic_business
+
+    if oauth_business:
+        return oauth_business
+
+    raise HTTPException(
+        status_code = status.HTTP_401_UNAUTHORIZED,
+        detail = "Not Authenticated",
+    )
