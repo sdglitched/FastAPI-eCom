@@ -13,7 +13,7 @@ from sqlalchemy import URL
 from fastapi_ecom.app import app
 from fastapi_ecom.config import config as cnfg
 from fastapi_ecom.database import baseobjc, get_async_session, get_engine
-from fastapi_ecom.utils.auth import security
+from fastapi_ecom.utils.basic_auth import security
 from tests.business import _test_data_business
 from tests.customer import _test_data_customer
 from tests.order import _test_data_order_details, _test_data_orders

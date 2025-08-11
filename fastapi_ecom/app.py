@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
 
 from fastapi_ecom.config import config
 from fastapi_ecom.router import business, customer, order, product
@@ -18,7 +19,13 @@ app = FastAPI(
         description="E-Commerce API for businesses and end users using FastAPI.",
         version="0.1.0",
         openapi_tags=tags_metadata,
+        swagger_ui_init_oauth={
+            "clientId": config.GOOGLE_CLIENT_ID,
+            "clientSecret": config.GOOGLE_CLIENT_SECRET,
+        }
     )
+
+app.add_middleware(SessionMiddleware, secret_key=config.GOOGLE_CLIENT_SECRET)
 
 PREFIX = "/api/v1"
 

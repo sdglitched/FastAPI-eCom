@@ -35,10 +35,10 @@ class BusinessView(BusinessBase):
     """
     email: EmailStr
     name: str
-    addr_line_1: str
-    addr_line_2: str
-    city: str
-    state: str
+    addr_line_1: Optional[str]
+    addr_line_2: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
 
 
 class BusinessCreate(BusinessView):
