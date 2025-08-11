@@ -5,7 +5,7 @@ from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
-from fastapi_ecom.utils.auth import security
+from fastapi_ecom.utils.basic_auth import security
 from tests.order import _test_data_order_details, _test_data_orders
 
 

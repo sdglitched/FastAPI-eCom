@@ -6,7 +6,7 @@ from fastapi.security import HTTPBasicCredentials
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
-from fastapi_ecom.utils.auth import security
+from fastapi_ecom.utils.basic_auth import security
 
 
 @pytest.mark.parametrize(
