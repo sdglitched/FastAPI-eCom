@@ -19,6 +19,7 @@ from fastapi_ecom.database.pydantic_schemas.business import (
     BusinessView,
 )
 from fastapi_ecom.utils.auth import verify_business_cred
+from fastapi_ecom.utils.logging_setup import failure, general, success, warning
 
 router = APIRouter(prefix="/business")
 
@@ -50,19 +51,23 @@ async def create_business(business: BusinessCreate, db: AsyncSession = Depends(g
         state=business.state.strip(),
         uuid=uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
     )
+    general(f"Adding account for business in database: {business.email}")
     db.add(db_business)
     try:
         await db.flush()
     except IntegrityError as expt:
+        failure(f"Business account creation failed - Uniqueness constraint violation for email: {business.email}")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Uniqueness constraint failed - Please try again"
         ) from expt
     except Exception as expt:
+        failure(f"Business account creation failed with unexpected error for email: {business.email}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected database error occurred."
         ) from expt
+    success(f"Business account created successfully with email: {business.email}")
     return {
         "action": "post",
         "business": BusinessView.model_validate(db_business).model_dump()
@@ -77,6 +82,7 @@ async def get_business_me(business_auth = Depends(verify_business_cred)) -> dict
 
     :return: Dictionary containing the action type and the authenticated business's email.
     """
+    general(f"Business authentication successful for: {business_auth.email}")
     return {
         "action": "get",
         "email": business_auth.email
@@ -101,14 +107,17 @@ async def get_businesses(
     :raises HTTPException:
         - If no business exist in the database, it raises 404 Not Found.
     """
+    general(f"Searching businesses with skip={skip}, limit={limit}")
     query = select(Business).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     businesses = result.scalars().all()
     if not businesses:
+        warning("No businesses found in database")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No business present in database"
         )
+    success(f"Found {len(businesses)} businesses")
     return {
         "action": "get",
         "businesses": [BusinessView.model_validate(business).model_dump() for business in businesses]
@@ -129,6 +138,7 @@ async def delete_business(db: AsyncSession = Depends(get_db), business_auth = De
         - If a uniqueness constraint fails, it returns a 409 Conflict status.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    general(f"Deleting business account: {business_auth.email}")
     query = select(Business).where(Business.uuid == business_auth.uuid).options(selectinload("*"))
     result = await db.execute(query)
     business_to_delete = result.scalar_one_or_none()
@@ -142,10 +152,12 @@ async def delete_business(db: AsyncSession = Depends(get_db), business_auth = De
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Business account deletion failed for: {business_auth.email}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected database error occurred."
         ) from expt
+    success(f"Business account deleted successfully: {business_auth.email}")
     return {
         "action": "delete",
         "business": BusinessView.model_validate(business_to_delete).model_dump()
@@ -171,6 +183,8 @@ async def update_business(
         - If a uniqueness constraint fails, it returns a 409 Conflict status.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    business_email = business_auth.email  # Capture email before potential database errors
+    general(f"Updating details of business: {business_email}")
     query = select(Business).where(Business.uuid == business_auth.uuid).options(selectinload("*"))
     result = await db.execute(query)
     business_to_update = result.scalar_one_or_none()
@@ -190,6 +204,7 @@ async def update_business(
         try:
             await db.flush()
         except IntegrityError as expt:
+            failure(f"Business update failed - Uniqueness constraint violation for: {business_email}")
             raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Uniqueness constraint failed - Please try again"
@@ -200,10 +215,12 @@ async def update_business(
             interactions due to which mocking one part wont produce the desired result. Thus,
             we will keep it uncovered until a alternative can be made for testing this exception block.
             """
+            failure(f"Business update failed with unexpected error for: {business_email}")
             raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="An unexpected database error occurred."
                 ) from expt
+    success(f"Business details updated successfully: {business_email}")
     return {
         "action": "put",
         "business": BusinessView.model_validate(business_to_update).model_dump()

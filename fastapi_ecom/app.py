@@ -4,6 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from fastapi_ecom.config import config
 from fastapi_ecom.router import business, customer, order, product
+from fastapi_ecom.utils.logging_setup import general
 
 # Metadata for API tags
 tags_metadata = [
@@ -36,6 +37,7 @@ def root() -> dict[str, str]:
 
     :return: Metadata about the API, including title, description, and version.
     """
+    general("Root endpoint accessed")
     return{
         "title": "FastAPI ECOM",
         "description": "E-Commerce API for businesses and end users using FastAPI.",
@@ -58,6 +60,7 @@ def start_service():
 
     :raises RuntimeError: If configuration parameters are missing or invalid.
     """
+    general("FastAPI server started")
     uvicorn.run(
         "fastapi_ecom.app:app",
         host=config.servhost,

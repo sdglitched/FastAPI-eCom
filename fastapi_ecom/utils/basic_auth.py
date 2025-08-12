@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from fastapi_ecom.database.db_setup import get_db
 from fastapi_ecom.database.models.business import Business
 from fastapi_ecom.database.models.customer import Customer
+from fastapi_ecom.utils.logging_setup import success, warning
 
 # Initialize HTTP Basic Authentication.
 # This will prompt users for a username and password when accessing secured endpoints.
@@ -33,10 +34,13 @@ async def verify_basic_customer_cred(credentials: HTTPBasicCredentials | None = 
     customer_by_email = result.scalar_one_or_none()
 
     if not customer_by_email:
+        warning(f"No customer account found for email: {credentials.username}")
         return None
     elif not bcrypt.checkpw(credentials.password.encode('utf-8'), customer_by_email.password.encode('utf-8')):
+        warning(f"Invalid password for customer: {credentials.username}")
         return None
     else:
+        success(f"Customer authenticated via basic auth: {credentials.username}")
         return customer_by_email
 
 async def verify_basic_business_cred(credentials: HTTPBasicCredentials | None = Depends(security), db: AsyncSession = Depends(get_db)) -> Business:
@@ -59,8 +63,11 @@ async def verify_basic_business_cred(credentials: HTTPBasicCredentials | None = 
     business_by_email = result.scalar_one_or_none()
 
     if not business_by_email:
+        warning(f"No business account found for email: {credentials.username}")
         return None
     elif not bcrypt.checkpw(credentials.password.encode('utf-8'), business_by_email.password.encode('utf-8')):
+        warning(f"Invalid password for business: {credentials.username}")
         return None
     else:
+        success(f"Business authenticated via basic auth: {credentials.username}")
         return business_by_email

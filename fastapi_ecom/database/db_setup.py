@@ -12,6 +12,7 @@ from fastapi_ecom.database import (  # noqa: F401
     migrpath,
     models,
 )
+from fastapi_ecom.utils.logging_setup import general, success
 
 
 def make_database() -> None:
@@ -24,16 +25,21 @@ def make_database() -> None:
     - Marks the database as being at the latest migration version.
     """
     # Use the synchronous engine to create the database schema.
+    general("Creating database schema with synchronous engine")
     sync_engine = get_engine(engine="sync")
     baseobjc.metadata.create_all(bind=sync_engine)
+    success("Database schema created successfully")
 
     # Set up Alembic configuration for migration management.
+    general("Setting up Alembic configuration")
     alembic_config = config.Config(alempath)
     alembic_config.set_main_option("script_location", migrpath)
     alembic_config.set_main_option("sqlalchemy.url", get_database_url().render_as_string(hide_password=False))
 
     # Mark the database at the latest migration head.
+    general("Marking database at latest migration head")
     command.stamp(alembic_config, "head")
+    success("Database marked at migration head successfully")
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
