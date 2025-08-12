@@ -20,6 +20,7 @@ from fastapi_ecom.database.pydantic_schemas.product import (
     ProductViewInternal,
 )
 from fastapi_ecom.utils.auth import verify_business_cred
+from fastapi_ecom.utils.logging_setup import failure, general, success, warning
 
 router = APIRouter(prefix="/product")
 
@@ -53,6 +54,7 @@ async def add_product(
         business_id = business_auth.uuid,
         uuid=uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
     )
+    general(f"Adding product '{product.name}' to database by {business_auth.email}")
     db.add(db_product)
     try:
         await db.flush()
@@ -62,10 +64,12 @@ async def add_product(
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Product creation failed for '{product.name}' with unexpected error")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
             ) from expt
+    success(f"Product '{product.name}' created successfully by business: {business_auth.uuid}")
     return {
         "action": "post",
         "product": ProductViewInternal.model_validate(db_product).model_dump()
@@ -91,14 +95,17 @@ async def get_products(
         - If no products for the currently authenticated business exists in the database, it raises
           404 Not Found.
     """
+    general(f"Searching all products with skip={skip}, limit={limit}")
     query = select(Product).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
+        warning("No products found in database")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No product present in database"
         )
+    success(f"Found {len(products)} products")
     return {
         "action": "get",
         "products": [ProductView.model_validate(product).model_dump() for product in products]
@@ -125,16 +132,19 @@ async def get_product_by_text(
     :raises HTTPException:
         If no matching products exists in the database, it raises 404 Not Found.
     """
+    general(f"Searching products by text '{text}' with skip={skip}, limit={limit}")
     query = select(Product).where(
         or_(Product.name.ilike(f"%{text}%"), Product.description.ilike(f"%{text}%"))
     ).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
+        warning(f"No products found matching text '{text}'")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such product present in database"
         )
+    success(f"Found {len(products)} products matching text '{text}'")
     return {
         "action": "get",
         "products": [ProductView.model_validate(product).model_dump() for product in products]
@@ -161,14 +171,17 @@ async def get_products_internal(
     :raises HTTPException:
         If no products are associated with the authenticated business, it raises 404 Not Found.
     """
+    general(f"Searching products for business {business_auth.uuid} with skip={skip}, limit={limit}")
     query = select(Product).where(Product.business_id == business_auth.uuid).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     products = result.scalars().all()
     if not products:
+        warning(f"No products found for business {business_auth.email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No product present in database"
         )
+    success(f"Found {len(products)} products for business {business_auth.email}")
     return {
         "action": "get",
         "products": [ProductViewInternal.model_validate(product).model_dump() for product in products]
@@ -194,14 +207,17 @@ async def get_product_by_uuid(
         If no products with the given UUID is associated with the authenticated business, it raises
         404 Not Found.
     """
+    general(f"Searching for product {product_id} for business {business_auth.uuid}")
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_by_uuid = result.scalar_one_or_none()
     if not product_by_uuid:
+        warning(f"Product {product_id} not found for business {business_auth.uuid}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
         )
+    success(f"Found product {product_id} for business {business_auth.uuid}")
     return {
         "action": "get",
         "product": ProductViewInternal.model_validate(product_by_uuid)
@@ -228,10 +244,12 @@ async def delete_product(
           raises 404 Not Found.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    general(f"Deleting product {product_id} for business {business_auth.uuid}")
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_to_delete = result.scalar_one_or_none()
     if not product_to_delete:
+        warning(f"Product {product_id} not found for deletion for business {business_auth.uuid}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
@@ -246,10 +264,12 @@ async def delete_product(
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Product deletion failed for {product_id} for business {business_auth.uuid}")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
             ) from expt
+    success(f"Product {product_id} deleted successfully for business {business_auth.uuid}")
     return {
         "action": "delete",
         "product": ProductViewInternal.model_validate(product_to_delete).model_dump()
@@ -277,10 +297,12 @@ async def update_product(
           raises 404 Not Found.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    general(f"Updating product {product_id} for business {business_auth.uuid}")
     query = select(Product).where(and_(Product.uuid == product_id, Product.business_id == business_auth.uuid)).options(selectinload("*"))
     result = await db.execute(query)
     product_to_update = result.scalar_one_or_none()
     if not product_to_update:
+        warning(f"Product {product_id} not found for update for business {business_auth.uuid}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not present in database"
@@ -314,10 +336,12 @@ async def update_product(
             interactions due to which mocking one part wont produce the desired result. Thus,
             we will keep it uncovered until a alternative can be made for testing this exception block.
             """
+            failure(f"Product update failed for {product_id} for business {business_auth.uuid} with unexpected error")
             raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="An unexpected database error occurred."
                 ) from expt
+    success(f"Product {product_id} updated successfully for business {business_auth.uuid}")
     return {
         "action": "put",
         "product": ProductViewInternal.model_validate(product_to_update).model_dump()

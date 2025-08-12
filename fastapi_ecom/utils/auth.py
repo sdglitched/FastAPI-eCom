@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi_ecom.database.models.business import Business
 from fastapi_ecom.database.models.customer import Customer
 from fastapi_ecom.utils.basic_auth import verify_basic_business_cred, verify_basic_customer_cred
+from fastapi_ecom.utils.logging_setup import failure
 from fastapi_ecom.utils.oauth import verify_oauth_business_cred, verify_oauth_customer_cred
 
 
@@ -32,6 +33,7 @@ async def verify_cust_cred(
     if oauth_customer:
         return oauth_customer
 
+    failure("Customer authentication failed")
     raise HTTPException(
         status_code = status.HTTP_401_UNAUTHORIZED,
         detail = "Not Authenticated",
@@ -61,6 +63,7 @@ async def verify_business_cred(
     if oauth_business:
         return oauth_business
 
+    failure("Business authentication failed")
     raise HTTPException(
         status_code = status.HTTP_401_UNAUTHORIZED,
         detail = "Not Authenticated",

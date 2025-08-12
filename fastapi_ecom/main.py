@@ -3,6 +3,7 @@ import click
 from fastapi_ecom.app import start_service
 from fastapi_ecom.database.db_setup import make_database
 from fastapi_ecom.migrations.main import alembic_migration
+from fastapi_ecom.utils.logging_setup import general, success
 
 
 @click.group(name="fastapi_ecom", help="E-Commerce API for businesses and end users using FastAPI.")
@@ -26,7 +27,9 @@ def setup() -> None:
 
     :return: None
     """
+    general("Setting up database schema")
     make_database()
+    success("Database schema setup completed")
 
 @main.command(name="start", help="Start the FastAPI eComm application")
 def start() -> None:
@@ -37,6 +40,7 @@ def start() -> None:
 
     :return: None
     """
+    general("Starting FastAPI eComm application")
     start_service()
 
 @main.command(name="create-migration", help="Create a new migration script")
@@ -51,7 +55,9 @@ def create_migration(comment: str, autogenerate: bool) -> None:
 
     :return: None
     """
+    general(f"Creating migration with comment: {comment}")
     alembic_migration.create(comment, autogenerate)
+    success(f"Migration created successfully: {comment}")
 
 @main.command(name="db-version", help="Show the current database version")
 def db_version() -> None:
@@ -62,6 +68,7 @@ def db_version() -> None:
 
     :return: None
     """
+    general("Checking database version")
     alembic_migration.db_version()
 
 @main.command(name="upgrade-db", help="Upgrade the database to a specific version")
@@ -75,7 +82,9 @@ def upgrade_db(version: str) -> None:
 
     :return: None
     """
+    general(f"Upgrading database to version: {version}")
     alembic_migration.upgrade(version)
+    success(f"Database upgraded to version: {version}")
 
 @main.command(name="downgrade-db", help="Downgrade the database to a specific version")
 @click.argument("version", type=str)
@@ -88,4 +97,6 @@ def downgrade_db(version: str) -> None:
 
     :return: None
     """
+    general(f"Downgrading database to version: {version}")
     alembic_migration.downgrade(version)
+    success(f"Database downgraded to version: {version}")

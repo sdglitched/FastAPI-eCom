@@ -19,6 +19,7 @@ from fastapi_ecom.database.pydantic_schemas.customer import (
     CustomerView,
 )
 from fastapi_ecom.utils.auth import verify_cust_cred
+from fastapi_ecom.utils.logging_setup import failure, general, success, warning
 
 router = APIRouter(prefix="/customer")
 
@@ -50,19 +51,23 @@ async def create_customer(customer: CustomerCreate, db: AsyncSession = Depends(g
         state = customer.state.strip(),
         uuid = uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
     )
+    general(f"Adding account for customer in database: {customer.email}")
     db.add(db_customer)
     try:
         await db.flush()
     except IntegrityError as expt:
-       raise HTTPException(
+        failure(f"Customer account creation failed - Uniqueness constraint violation for email: {customer.email}")
+        raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Uniqueness constraint failed - Please try again"
             ) from expt
     except Exception as expt:
+        failure(f"Customer account creation failed with unexpected error for email: {customer.email}")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
             ) from expt
+    success(f"Customer account created successfully with email: {customer.email}")
     return {
         "action": "post",
         "customer": CustomerView.model_validate(db_customer).model_dump()
@@ -77,6 +82,7 @@ async def get_customer_me(customer_auth = Depends(verify_cust_cred)) -> dict[str
 
     :return: Dictionary containing the action type and the authenticated customer's email.
     """
+    general(f"Customer authentication successful for: {customer_auth.email}")
     return {
         "action": "get",
         "email": customer_auth.email
@@ -101,14 +107,17 @@ async def get_customers(
     :raises HTTPException:
         - If no customer exist in the database, it raises 404 Not Found.
     """
+    general(f"Searching customers with skip={skip}, limit={limit}")
     query = select(Customer).options(selectinload("*")).offset(skip).limit(limit)
     result = await db.execute(query)
     customers = result.scalars().all()
     if not customers:
+        warning("No customers found in database")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No customer present in database"
         )
+    success(f"Found {len(customers)} customers")
     return {
         "action": "get",
         "customers": [CustomerView.model_validate(customer).model_dump() for customer in customers]
@@ -122,12 +131,14 @@ async def delete_customer(db: AsyncSession = Depends(get_db), customer_auth = De
     :param db: Active asynchronous database session dependency.
     :param customer_auth: Authenticated customer object.
 
-    :return: Dictionary containing the action type and the deleted customer's data.
+    :return: Dictionary containing the action type and the deleted customer's data, validated and
+             serialized using the `CustomerView` schema.
 
     :raises HTTPException:
         - If a uniqueness constraint fails, it returns a 409 Conflict status.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    general(f"Deleting customer account: {customer_auth.email}")
     query = select(Customer).where(Customer.uuid == customer_auth.uuid).options(selectinload("*"))
     result = await db.execute(query)
     customer_to_delete = result.scalar_one_or_none()
@@ -141,10 +152,12 @@ async def delete_customer(db: AsyncSession = Depends(get_db), customer_auth = De
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Customer account deletion failed for: {customer_auth.email}")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
             ) from expt
+    success(f"Customer account deleted successfully: {customer_auth.email}")
     return {
         "action": "delete",
         "customer": CustomerView.model_validate(customer_to_delete).model_dump()
@@ -165,6 +178,8 @@ async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(g
         - If a uniqueness constraint fails, it returns a 409 Conflict status.
         - If there are other database errors, it returns a 500 Internal Server Error.
     """
+    customer_email = customer_auth.email  # Capture email before potential database errors
+    general(f"Updating details of customer: {customer_email}")
     query = select(Customer).where(Customer.uuid == customer_auth.uuid).options(selectinload("*"))
     result = await db.execute(query)
     customer_to_update = result.scalar_one_or_none()
@@ -184,6 +199,7 @@ async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(g
         try:
             await db.flush()
         except IntegrityError as expt:
+            failure(f"Customer update failed - Uniqueness constraint violation for: {customer_email}")
             raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Uniqueness constraint failed - Please try again"
@@ -194,10 +210,12 @@ async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(g
             interactions due to which mocking one part wont produce the desired result. Thus,
             we will keep it uncovered until a alternative can be made for testing this exception block.
             """
+            failure(f"Customer update failed with unexpected error for: {customer_email}")
             raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="An unexpected database error occurred."
                 ) from expt
+    success(f"Customer details updated successfully: {customer_email}")
     return {
         "action": "put",
         "customer": CustomerView.model_validate(customer_to_update).model_dump()

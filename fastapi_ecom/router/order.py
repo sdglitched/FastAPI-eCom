@@ -24,6 +24,7 @@ from fastapi_ecom.database.pydantic_schemas.order_details import (
     OrderDetailsViewInternal,
 )
 from fastapi_ecom.utils.auth import verify_cust_cred
+from fastapi_ecom.utils.logging_setup import failure, general, warning
 
 router = APIRouter(prefix="/order")
 
@@ -57,6 +58,7 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Order creation failed with unexpected error for customer: {customer_auth.email}")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -95,6 +97,7 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Order creation failed with unexpected error for customer: {customer_auth.email}")
         raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected database error occurred."
@@ -135,10 +138,12 @@ async def get_orders(
     :raises HTTPException:
         If no products are associated with the authenticated customer, it raises 404 Not Found.
     """
+    general(f"Searching orders for customer {customer_auth.email} with skip={skip}, limit={limit}")
     query = select(Order).where(Order.user_id == customer_auth.uuid).options(selectinload(Order.order_details)).offset(skip).limit(limit)
     result = await db.execute(query)
     orders = result.scalars().unique().all()
     if not orders:
+        warning(f"No order found in database for customer {customer_auth.email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -196,6 +201,7 @@ async def get_orders_internal(
     result = await db.execute(query)
     orders = result.scalars().unique().all()
     if not orders:
+        warning("No order found in database")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No orders in database"
@@ -244,6 +250,7 @@ async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), c
     result = await db.execute(query)
     order = result.scalar_one_or_none()
     if not order:
+        warning(f"Order {order_id} no present in database")
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
@@ -294,6 +301,7 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
     result = await db.execute(query)
     order_to_delete = result.scalar_one_or_none()
     if not order_to_delete:
+        warning(f"Order {order_id} no present in database")
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
             detail = "Order not present in database"
@@ -322,6 +330,7 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
+        failure(f"Order deletion failed with unexpected error for customer: {customer_auth.email}")
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = "Failed while deleting"
