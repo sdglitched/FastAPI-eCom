@@ -21,7 +21,7 @@ httpx = "^0.28.1"
 itsdangerous = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.13.0"
+ruff = "^0.14.0"
 pytest = "^8.3.3"
 tox = "^4.23.2"
 pytest-cov = "^7.0.0"
