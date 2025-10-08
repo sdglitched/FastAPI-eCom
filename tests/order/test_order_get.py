@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
@@ -13,18 +12,18 @@ from tests.order import _test_data_order_details, _test_data_orders
     "order_id, present",
     [
         pytest.param("2b203687", True, id="ORDER GET Endpoint - Fetch all the orders of authenticated order"),
-        pytest.param("b73a7a28", False, id="ORDER GET Endpoint - Fail to fetch orders of authenticated order")
-    ]
+        pytest.param("b73a7a28", False, id="ORDER GET Endpoint - Fail to fetch orders of authenticated order"),
+    ],
 )
 async def test_get_orders(
-        test_app: FastAPI,
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        order_id: str,
-        present: str
+    test_app: FastAPI,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    mocker: MockerFixture,
+    order_id: str,
+    present: str,
 ) -> None:
     """
     Test the `get` endpoint for fetching all the order of the authenticated order of the Order
@@ -48,13 +47,10 @@ async def test_get_orders(
     order_details = _test_data_order_details()
     orders = []
     for ord in ords.values():
-        if ord.user_id == order_id:  #UUID of the default order account which is used for testing
+        if ord.user_id == order_id:  # UUID of the default order account which is used for testing
             order_items = [
-                {
-                    "product_id": detail.product_id,
-                    "quantity": detail.quantity,
-                    "price": detail.price
-                } for detail in order_details.values()
+                {"product_id": detail.product_id, "quantity": detail.quantity, "price": detail.price}
+                for detail in order_details.values()
                 if detail.order_id == ord.uuid
             ]
             total_price = sum(item["quantity"] * item["price"] for item in order_items)
@@ -62,7 +58,7 @@ async def test_get_orders(
                 "uuid": ord.uuid,
                 "order_date": ord.order_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "total_price": total_price,
-                "order_items": order_items
+                "order_items": order_items,
             }
             orders.append(order_view_data)
 
@@ -84,26 +80,14 @@ async def test_get_orders(
     """
     if present:
         assert response.status_code == 200
-        assert response.json() == {
-            "action": "get",
-            "orders": orders
-        }
+        assert response.json() == {"action": "get", "orders": orders}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "No orders in database"
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="ORDER GET Endpoint - Fetch all the orders")
-    ]
-)
-async def test_get_orders_internal(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        _: None
-) -> None:
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="ORDER GET Endpoint - Fetch all the orders")])
+async def test_get_orders_internal(client: AsyncClient, db_test_create: None, db_test_data: None, _: None) -> None:
     """
     Test the `get` endpoint for fetching all the orders of the Order API.
 
@@ -121,12 +105,8 @@ async def test_get_orders_internal(
     orders = []
     for ord in ords.values():
         order_items = [
-            {
-                "uuid": detail.uuid,
-                "product_id": detail.product_id,
-                "quantity": detail.quantity,
-                "price": detail.price
-            } for detail in order_details.values()
+            {"uuid": detail.uuid, "product_id": detail.product_id, "quantity": detail.quantity, "price": detail.price}
+            for detail in order_details.values()
             if detail.order_id == ord.uuid
         ]
         total_price = sum(item["quantity"] * item["price"] for item in order_items)
@@ -135,7 +115,7 @@ async def test_get_orders_internal(
             "user_id": ord.user_id,
             "order_date": ord.order_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "total_price": total_price,
-            "order_items": order_items
+            "order_items": order_items,
         }
         orders.append(order_view_data)
 
@@ -148,17 +128,10 @@ async def test_get_orders_internal(
     Test the response
     """
     assert response.status_code == 200
-    assert response.json() == {
-        "action": "get",
-        "orders": orders
-    }
+    assert response.json() == {"action": "get", "orders": orders}
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="ORDER GET Endpoint - Fail to fetch order")
-    ]
-)
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="ORDER GET Endpoint - Fail to fetch order")])
 async def test_get_orders_internal_fail(
     client: AsyncClient,
     db_test_create: None,
@@ -181,20 +154,16 @@ async def test_get_orders_internal_fail(
     assert response.status_code == 404
     assert response.json()["detail"] == "No orders in database"
 
+
 @pytest.mark.parametrize(
     "order_id, present",
     [
         pytest.param("375339b1", True, id="ORDER GET Endpoint - Fetch the specified order of the authenticated order"),
-        pytest.param("xxxx1111", False, id="ORDER GET Endpoint - Fail to fetch the specified order of the authenticated order")
-    ]
+        pytest.param("xxxx1111", False, id="ORDER GET Endpoint - Fail to fetch the specified order of the authenticated order"),
+    ],
 )
 async def test_get_order_by_uuid(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        order_id: str,
-        present: str
+    client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, order_id: str, present: str
 ) -> None:
     """
     Test the `get` endpoint for fetching all the orders of the Order API.
@@ -216,11 +185,8 @@ async def test_get_order_by_uuid(
     for ord in ords.values():
         if ord.uuid == order_id:
             order_items = [
-                {
-                    "product_id": detail.product_id,
-                    "quantity": detail.quantity,
-                    "price": detail.price
-                } for detail in order_details.values()
+                {"product_id": detail.product_id, "quantity": detail.quantity, "price": detail.price}
+                for detail in order_details.values()
                 if detail.order_id == ord.uuid
             ]
             total_price = sum(item["quantity"] * item["price"] for item in order_items)
@@ -228,7 +194,7 @@ async def test_get_order_by_uuid(
                 "uuid": ord.uuid,
                 "order_date": ord.order_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "total_price": total_price,
-                "order_items": order_items
+                "order_items": order_items,
             }
 
     """
@@ -241,10 +207,7 @@ async def test_get_order_by_uuid(
     """
     if present:
         assert response.status_code == 200
-        assert response.json() == {
-            "action": "get",
-            "order": order
-        }
+        assert response.json() == {"action": "get", "order": order}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "Order not present in database"

@@ -1,4 +1,3 @@
-
 import pytest
 from alembic import command, config
 from click.testing import CliRunner
@@ -9,18 +8,9 @@ from tests import _alempath
 
 
 @pytest.mark.parametrize(
-    "cmd, code",
-    [
-        pytest.param("db-version", 0, id="MAIN Function - DB-VERSION - Check the current revision of the database schema")
-    ]
+    "cmd, code", [pytest.param("db-version", 0, id="MAIN Function - DB-VERSION - Check the current revision of the database schema")]
 )
-def test_comd_db_version(
-        runner: CliRunner,
-        db_test_create: None,
-        get_test_database_url: URL,
-        cmd: str,
-        code: int
-) -> None:
+def test_comd_db_version(runner: CliRunner, db_test_create: None, get_test_database_url: URL, cmd: str, code: int) -> None:
     """
     Test the functionality cli `db-version` command.
 

@@ -28,8 +28,9 @@ from fastapi_ecom.utils.logging_setup import failure, general, warning
 
 router = APIRouter(prefix="/order")
 
+
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=OrderResultInternal, tags=["order"])
-async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), customer_auth = Depends(verify_cust_cred)) -> OrderResultInternal:
+async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), customer_auth=Depends(verify_cust_cred)) -> OrderResultInternal:
     """
     Endpoint to place an order by the authenticated customer.
 
@@ -44,25 +45,22 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
         If database integrity constraints fails, it returns a 500 Internal Server Error.
     """
     new_order = Order(
-        user_id = customer_auth.uuid,
-        order_date = order.order_date,
-        total_price = 0.0,  # Initial total, calculated below
-        uuid = uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
+        user_id=customer_auth.uuid,
+        order_date=order.order_date,
+        total_price=0.0,  # Initial total, calculated below
+        uuid=uuid4().hex[0:8],  # Assign UUID manually; One UUID per transaction
     )
     db.add(new_order)
     try:
         await db.flush()  # Generate order ID for relations
-    except Exception as expt:  #pragma: no cover
+    except Exception as expt:  # pragma: no cover
         """
         This part of the code cannot be tested as this endpoint performs multiple database
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
         failure(f"Order creation failed with unexpected error for customer: {customer_auth.email}")
-        raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
 
     # Create OrderDetail entries and calculate the total price
     total_price = 0
@@ -72,17 +70,14 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
         result = await db.execute(query)
         product = result.scalar_one_or_none()
         if not product:
-            raise HTTPException(
-                status_code = status.HTTP_404_NOT_FOUND,
-                detail = f"Product with ID: {item.product_id} does not exist."
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with ID: {item.product_id} does not exist.")
         total_price += product.price * item.quantity
         order_detail = OrderDetail(
-            order_id = new_order.uuid,
-            product_id = item.product_id,
-            quantity = item.quantity,
-            price = product.price,
-            uuid = uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
+            order_id=new_order.uuid,
+            product_id=item.product_id,
+            quantity=item.quantity,
+            price=product.price,
+            uuid=uuid4().hex[0:8],  # Assign UUID manually; One UUID per transaction
         )
         db.add(order_detail)
         order_items.append(order_detail)
@@ -91,29 +86,24 @@ async def create_order(order: OrderCreate, db: AsyncSession = Depends(get_db), c
     new_order.total_price = total_price
     try:
         await db.flush()
-    except Exception as expt:  #pragma: no cover
+    except Exception as expt:  # pragma: no cover
         """
         This part of the code cannot be tested as this endpoint performs multiple database
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
         failure(f"Order creation failed with unexpected error for customer: {customer_auth.email}")
-        raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     new_order.order_items = order_items
-    return {
-        "action": "post",
-        "order": OrderViewInternal.model_validate(new_order).model_dump()
-    }
+    return {"action": "post", "order": OrderViewInternal.model_validate(new_order).model_dump()}
+
 
 @router.get("/search", status_code=status.HTTP_200_OK, response_model=OrderManyResult, tags=["order"])
 async def get_orders(
     skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
     limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
     db: AsyncSession = Depends(get_db),
-    customer_auth = Depends(verify_cust_cred)
+    customer_auth=Depends(verify_cust_cred),
 ) -> OrderManyResult:
     """
     Endpoint fetches a paginated list of orders and its details associated with the authenticated
@@ -144,37 +134,20 @@ async def get_orders(
     orders = result.scalars().unique().all()
     if not orders:
         warning(f"No order found in database for customer {customer_auth.email}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No orders in database"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No orders in database")
     order_views = []
     for order in orders:
-        order_items = [
-            OrderDetailsView(
-                product_id = detail.product_id,
-                quantity = detail.quantity,
-                price = detail.price
-            )
-            for detail in order.order_details
-        ]
-        order_view_data = OrderView(
-            uuid = order.uuid,
-            order_date = order.order_date,
-            total_price = order.total_price,
-            order_items = order_items
-        )
+        order_items = [OrderDetailsView(product_id=detail.product_id, quantity=detail.quantity, price=detail.price) for detail in order.order_details]
+        order_view_data = OrderView(uuid=order.uuid, order_date=order.order_date, total_price=order.total_price, order_items=order_items)
         order_views.append(order_view_data.model_dump())
-    return {
-        "action": "get",
-        "orders": order_views
-    }
+    return {"action": "get", "orders": order_views}
+
 
 @router.get("/search/internal", status_code=status.HTTP_200_OK, response_model=OrderManyResultInternal, tags=["order"])
 async def get_orders_internal(
     skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
     limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> OrderManyResultInternal:
     """
     Endpoint fetches a paginated list of orders and its details.
@@ -202,36 +175,22 @@ async def get_orders_internal(
     orders = result.scalars().unique().all()
     if not orders:
         warning("No order found in database")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No orders in database"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No orders in database")
     order_views = []
     for order in orders:
         order_items = [
-            OrderDetailsViewInternal(
-                product_id = detail.product_id,
-                quantity = detail.quantity,
-                price = detail.price,
-                uuid = detail.uuid
-            )
+            OrderDetailsViewInternal(product_id=detail.product_id, quantity=detail.quantity, price=detail.price, uuid=detail.uuid)
             for detail in order.order_details
         ]
         order_view_data = OrderViewInternal(
-            uuid = order.uuid,
-            user_id = order.user_id,
-            order_date = order.order_date,
-            total_price = order.total_price,
-            order_items = order_items
+            uuid=order.uuid, user_id=order.user_id, order_date=order.order_date, total_price=order.total_price, order_items=order_items
         )
         order_views.append(order_view_data.model_dump())
-    return {
-        "action": "get",
-        "orders": order_views
-    }
+    return {"action": "get", "orders": order_views}
+
 
 @router.get("/search/uuid/{order_id}", status_code=status.HTTP_200_OK, response_model=OrderResult, tags=["order"])
-async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), customer_auth = Depends(verify_cust_cred)):
+async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), customer_auth=Depends(verify_cust_cred)):
     """
     Endpoint fetches a specific order and its details by its UUID associated with the authenticated
     customer.
@@ -251,28 +210,11 @@ async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), c
     order = result.scalar_one_or_none()
     if not order:
         warning(f"Order {order_id} no present in database")
-        raise HTTPException(
-            status_code = status.HTTP_404_NOT_FOUND,
-            detail = "Order not present in database"
-        )
-    order_items = [
-        OrderDetailsView(
-            product_id = detail.product_id,
-            quantity = detail.quantity,
-            price = detail.price
-        )
-        for detail in order.order_details
-    ]
-    order_view = OrderView(
-        uuid = order.uuid,
-        order_date = order.order_date,
-        total_price = order.total_price,
-        order_items = order_items
-    )
-    return {
-        "action": "get",
-        "order": OrderView.model_validate(order_view).model_dump()
-    }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not present in database")
+    order_items = [OrderDetailsView(product_id=detail.product_id, quantity=detail.quantity, price=detail.price) for detail in order.order_details]
+    order_view = OrderView(uuid=order.uuid, order_date=order.order_date, total_price=order.total_price, order_items=order_items)
+    return {"action": "get", "order": OrderView.model_validate(order_view).model_dump()}
+
 
 # @router.put("/update/uuid/{order_id}", response_model=OrderResult, tags=["order"])
 # async def update_order():
@@ -280,8 +222,9 @@ async def get_order_by_uuid(order_id: str, db: AsyncSession = Depends(get_db), c
 #       TODO: Update endpoint will be made available one the carting system is implemented
 #       """
 
+
 @router.delete("/delete/uuid/{order_id}", status_code=status.HTTP_202_ACCEPTED, response_model=OrderResult, tags=["order"])
-async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), customer_auth = Depends(verify_cust_cred)) -> OrderResult:
+async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), customer_auth=Depends(verify_cust_cred)) -> OrderResult:
     """
     Endpoint to delete a order by its UUID associated for an authenticated customer.
 
@@ -302,40 +245,23 @@ async def delete_order(order_id: str, db: AsyncSession = Depends(get_db), custom
     order_to_delete = result.scalar_one_or_none()
     if not order_to_delete:
         warning(f"Order {order_id} no present in database")
-        raise HTTPException(
-            status_code = status.HTTP_404_NOT_FOUND,
-            detail = "Order not present in database"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not present in database")
     order_items = [
-        OrderDetailsView(
-            product_id = detail.product_id,
-            quantity = detail.quantity,
-            price = detail.price
-        )
-        for detail in order_to_delete.order_details
+        OrderDetailsView(product_id=detail.product_id, quantity=detail.quantity, price=detail.price) for detail in order_to_delete.order_details
     ]
     order_view = OrderView(
-        uuid = order_to_delete.uuid,
-        order_date = order_to_delete.order_date,
-        total_price = order_to_delete.total_price,
-        order_items = order_items
+        uuid=order_to_delete.uuid, order_date=order_to_delete.order_date, total_price=order_to_delete.total_price, order_items=order_items
     )
     query = delete(Order).where(and_(Order.user_id == customer_auth.uuid, Order.uuid == order_id))
     await db.execute(query)
     try:
         await db.flush()
-    except Exception as expt:  #pragma: no cover
+    except Exception as expt:  # pragma: no cover
         """
         This part of the code cannot be tested as this endpoint performs multiple database
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
         failure(f"Order deletion failed with unexpected error for customer: {customer_auth.email}")
-        raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = "Failed while deleting"
-        ) from expt
-    return {
-        "action": "delete",
-        "order": OrderView.model_validate(order_view)
-    }
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed while deleting") from expt
+    return {"action": "delete", "order": OrderView.model_validate(order_view)}

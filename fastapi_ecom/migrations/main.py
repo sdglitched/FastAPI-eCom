@@ -1,4 +1,3 @@
-
 from alembic import command, config, runtime, script
 
 from fastapi_ecom.database import get_database_url, migrpath
@@ -59,14 +58,10 @@ class AlembicMigration:
 
             :return: An empty list as required by the Alembic environment context callback.
             """
-            curtrevs.update(
-                _rev.cmd_format(verbose=False) for _rev in scrtobjc.get_all_current(rev)
-            )
+            curtrevs.update(_rev.cmd_format(verbose=False) for _rev in scrtobjc.get_all_current(rev))
             return []
 
-        with runtime.environment.EnvironmentContext(
-            self.config, scrtobjc, fn=_get_rev_current, dont_mutate=True
-        ):
+        with runtime.environment.EnvironmentContext(self.config, scrtobjc, fn=_get_rev_current, dont_mutate=True):
             scrtobjc.run_env()
 
         return curtrevs
@@ -94,7 +89,7 @@ class AlembicMigration:
         post_revs = self._get_current()
         if pre_revs == post_revs:
             print("There is nothing to upgrade.")
-        else:  #pragma: no cover
+        else:  # pragma: no cover
             """
             This part of the cover cannot be tested as `sqlite` database does not support all the `ALTER TABLE` DDLs.
             """
@@ -114,7 +109,7 @@ class AlembicMigration:
         if pre_revs == post_revs:
             print("There is nothing to downgrade.")
         else:
-            print("Downgraded to:", post_revs if post_revs else '<base>')
+            print("Downgraded to:", post_revs if post_revs else "<base>")
 
 
 # Instantiate the AlembicMigration class for use in managing migrations.

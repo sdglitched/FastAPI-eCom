@@ -19,20 +19,20 @@ from fastapi_ecom.utils.basic_auth import security
                 "category": "test",
                 "mfg_date": "1900-01-01T00:00:00",
                 "exp_date": "1900-01-01T00:00:00",
-                "price": 150.05
+                "price": 150.05,
             },
             id="PRODUCT Post Endpoint - 201 Created",
         )
-    ]
+    ],
 )
 async def test_create_product(
-        test_app: FastAPI,
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        payload: dict[str, str]
+    test_app: FastAPI,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    mocker: MockerFixture,
+    payload: dict[str, str],
 ) -> None:
     """
     Test the `create` endpoint of the Product API.
@@ -58,7 +58,7 @@ async def test_create_product(
     """
     Perform the action of visiting the endpoint
     """
-    response = await client.post("/api/v1/product/create", json = payload)
+    response = await client.post("/api/v1/product/create", json=payload)
 
     """
     Test the response
@@ -74,6 +74,6 @@ async def test_create_product(
             "exp_date": payload["exp_date"],
             "price": payload["price"],
             "uuid": "abcd1234",
-            "business_id": "d76a11f2"
-        }
+            "business_id": "d76a11f2",
+        },
     }

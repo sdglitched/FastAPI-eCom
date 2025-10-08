@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi import HTTPException, status
 from httpx import AsyncClient
@@ -17,7 +16,7 @@ from sqlalchemy import URL
                 "addr_line_2": "xyz",
                 "city": "aaa",
                 "state": "bbb",
-                "password": "test_busi"
+                "password": "test_busi",
             },
             "create",
             id="BUSINESS Post Endpoint - 201 Created",
@@ -30,20 +29,14 @@ from sqlalchemy import URL
                 "addr_line_2": "xyz",
                 "city": "aaa",
                 "state": "bbb",
-                "password": "duplicate_business"
+                "password": "duplicate_business",
             },
             "duplicate",
             id="BUSINESS Post Endpoint - 409 Conflict",
-        )
-    ]
+        ),
+    ],
 )
-async def test_create_business(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        payload: dict[str, str],
-        type: str
-) -> None:
+async def test_create_business(client: AsyncClient, db_test_create: None, db_test_data: None, payload: dict[str, str], type: str) -> None:
     """
     Test the `create` endpoint of the Business API.
 
@@ -60,7 +53,7 @@ async def test_create_business(
     """
     Perform the action of visiting the endpoint
     """
-    response = await client.post("/api/v1/business/create", json = payload)
+    response = await client.post("/api/v1/business/create", json=payload)
 
     """
     Test the response
@@ -75,12 +68,13 @@ async def test_create_business(
                 "addr_line_1": payload["addr_line_1"],
                 "addr_line_2": payload["addr_line_2"],
                 "city": payload["city"],
-                "state": payload["state"]
-            }
+                "state": payload["state"],
+            },
         }
     else:
         assert response.status_code == 409
         assert response.json()["detail"] == "Uniqueness constraint failed - Please try again"
+
 
 @pytest.mark.parametrize(
     "payload",
@@ -93,17 +87,13 @@ async def test_create_business(
                 "addr_line_2": "xyz",
                 "city": "aaa",
                 "state": "bbb",
-                "password": "test_busi"
+                "password": "test_busi",
             },
-            id="BUSINESS Post Endpoint - 500 Internal Server Error")
-    ]
+            id="BUSINESS Post Endpoint - 500 Internal Server Error",
+        )
+    ],
 )
-async def test_create_business_fail(
-    client: AsyncClient,
-    get_test_database_url: URL,
-    mocker: MockerFixture,
-    payload: dict[str, str]
-) -> None:
+async def test_create_business_fail(client: AsyncClient, get_test_database_url: URL, mocker: MockerFixture, payload: dict[str, str]) -> None:
     """
     Test the `create` endpoint of the Business API for HTTP_500_INTERNAL_SERVER_ERROR.
 
@@ -120,10 +110,7 @@ async def test_create_business_fail(
     Create a mock database session and configure the `flush` method to raise an HTTPException.
     """
     mock_db = mocker.AsyncMock()
-    mock_db.flush.side_effect = HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="An unexpected database error occurred."
-    )
+    mock_db.flush.side_effect = HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.")
     mocker.patch("fastapi_ecom.router.business.get_db", return_value=mock_db)
 
     """

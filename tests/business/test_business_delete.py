@@ -1,23 +1,11 @@
-
 import pytest
 from httpx import AsyncClient
 
 from tests.business import _test_data_business
 
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="BUSINESS DELETE Endpoint - Deletes currently authenticated business")
-    ]
-)
-async def test_delete_business(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        _: None
-) -> None:
+@pytest.mark.parametrize("_", [pytest.param(None, id="BUSINESS DELETE Endpoint - Deletes currently authenticated business")])
+async def test_delete_business(client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, _: None) -> None:
     """
     Test the `delete` endpoint for deleting the currently authenticated business of the Business
     API.
@@ -51,6 +39,6 @@ async def test_delete_business(
             "addr_line_1": data["delete_business"].addr_line_1,
             "addr_line_2": data["delete_business"].addr_line_2,
             "city": data["delete_business"].city,
-            "state": data["delete_business"].state
-        }
+            "state": data["delete_business"].state,
+        },
     }

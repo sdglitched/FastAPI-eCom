@@ -6,18 +6,8 @@ from fastapi_ecom.config import config
 from fastapi_ecom.main import main
 
 
-@pytest.mark.parametrize(
-    "cmd, code",
-    [
-        pytest.param("start", 0, id="MAIN Function - START - Start FastAPI server")
-    ]
-)
-def test_comd_start(
-        runner: CliRunner,
-        mocker: MockerFixture,
-        cmd: str,
-        code: int
-) -> None:
+@pytest.mark.parametrize("cmd, code", [pytest.param("start", 0, id="MAIN Function - START - Start FastAPI server")])
+def test_comd_start(runner: CliRunner, mocker: MockerFixture, cmd: str, code: int) -> None:
     """
     Test the functionality cli `start` command.
 
@@ -44,9 +34,4 @@ def test_comd_start(
     assert result.exit_code == code
 
     # Check that `uvicorn.run` was called with the correct arguments
-    mock_run.assert_called_once_with(
-        "fastapi_ecom.app:app",
-        host=config.servhost,
-        port=config.servport,
-        reload=config.cgreload
-    )
+    mock_run.assert_called_once_with("fastapi_ecom.app:app", host=config.servhost, port=config.servport, reload=config.cgreload)

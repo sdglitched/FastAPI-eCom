@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -13,6 +12,7 @@ class APIResultAction(str, Enum):
     :cvar put: Represents an HTTP PUT action.
     :cvar delete: Represents an HTTP DELETE action.
     """
+
     get = "get"
     post = "post"
     put = "put"
@@ -25,4 +25,5 @@ class APIResult(BaseModel):
 
     :ivar action: The HTTP method associated with the API response, if applicable.
     """
-    action: Optional[APIResultAction]
+
+    action: APIResultAction | None

@@ -10,18 +10,10 @@ from tests import _alempath
 
 @pytest.mark.parametrize(
     "cmd, autogen, comment, code",
-    [
-        pytest.param("create-migration", "--autogenerate", "TEST", 0, id="MAIN Function - CREATE-MIGRATION - Create a new revision for the database")
-    ]
+    [pytest.param("create-migration", "--autogenerate", "TEST", 0, id="MAIN Function - CREATE-MIGRATION - Create a new revision for the database")],
 )
 def test_comd_create_migration(
-        runner: CliRunner,
-        get_test_database_url: URL,
-        mocker: MockerFixture,
-        cmd: str,
-        autogen: str,
-        comment: str,
-        code: int
+    runner: CliRunner, get_test_database_url: URL, mocker: MockerFixture, cmd: str, autogen: str, comment: str, code: int
 ) -> None:
     """
     Test the functionality cli `create-migration` command.

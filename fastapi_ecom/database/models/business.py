@@ -30,6 +30,7 @@ class Business(baseobjc, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableM
     :cvar products: Relationship to the `Product` model, representing the products offered by the
                     business.
     """
+
     __tablename__ = "businesses"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)

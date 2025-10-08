@@ -24,10 +24,11 @@ class Order(baseobjc, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableMixi
     :cvar customers: Relationship to the `Customer` model, representing the customer who placed the
                      order. The record will reflect customer deletion (passive deletes).
     """
+
     __tablename__ = "orders"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column("user_id", Text, ForeignKey('customers.uuid', ondelete="CASCADE"), nullable=False)
+    user_id = Column("user_id", Text, ForeignKey("customers.uuid", ondelete="CASCADE"), nullable=False)
     order_date = Column("order_date", Date, nullable=False)
     total_price = Column("total_price", Float, nullable=False)
 

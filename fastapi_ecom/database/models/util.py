@@ -13,6 +13,7 @@ class UUIDCreatableMixin:
     :cvar uuid: An 8-character hexadecimal string serving as a unique identifier for the record.
                 This UUID is generated upon creation and remains constant.
     """
+
     uuid = Column("uuid", Text, unique=True, nullable=False, default=uuid4().hex[0:8])
 
 
@@ -23,6 +24,7 @@ class DateCreatableMixin:
     :cvar creation_date: Timestamp marking when the record was created.
                          Automatically set to the current UTC datetime at creation.
     """
+
     creation_date = Column("creation_date", TIMESTAMP(timezone=True), nullable=False, default=partial(datetime.now, tz=UTC))
 
 
@@ -34,4 +36,5 @@ class DateUpdateableMixin:
                        Automatically set to the current UTC datetime at creation and should be
                        updated on each modification.
     """
+
     update_date = Column("update_date", TIMESTAMP(timezone=True), nullable=False, default=partial(datetime.now, tz=UTC))

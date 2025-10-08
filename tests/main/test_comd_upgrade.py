@@ -1,4 +1,3 @@
-
 import pytest
 from alembic import command, config
 from click.testing import CliRunner
@@ -10,18 +9,9 @@ from tests import _alempath
 
 @pytest.mark.parametrize(
     "cmd, revision, code",
-    [
-        pytest.param("upgrade-db", "306d801996a6", 0, id="MAIN Function - UPGRADE-DB - Upgrade the database to the certain revision")
-    ]
+    [pytest.param("upgrade-db", "306d801996a6", 0, id="MAIN Function - UPGRADE-DB - Upgrade the database to the certain revision")],
 )
-def test_comd_upgrade_db(
-        runner: CliRunner,
-        db_test_create: None,
-        get_test_database_url: URL,
-        cmd: str,
-        revision: str,
-        code: int
-) -> None:
+def test_comd_upgrade_db(runner: CliRunner, db_test_create: None, get_test_database_url: URL, cmd: str, revision: str, code: int) -> None:
     """
     Test the functionality cli `upgrade-db` command.
 

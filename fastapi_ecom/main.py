@@ -18,6 +18,7 @@ def main() -> None:
     """
     pass
 
+
 @main.command(name="setup", help="Setup the database schema")
 def setup() -> None:
     """
@@ -31,6 +32,7 @@ def setup() -> None:
     make_database()
     success("Database schema setup completed")
 
+
 @main.command(name="start", help="Start the FastAPI eComm application")
 def start() -> None:
     """
@@ -42,6 +44,7 @@ def start() -> None:
     """
     general("Starting FastAPI eComm application")
     start_service()
+
 
 @main.command(name="create-migration", help="Create a new migration script")
 @click.argument("comment", type=str)
@@ -59,6 +62,7 @@ def create_migration(comment: str, autogenerate: bool) -> None:
     alembic_migration.create(comment, autogenerate)
     success(f"Migration created successfully: {comment}")
 
+
 @main.command(name="db-version", help="Show the current database version")
 def db_version() -> None:
     """
@@ -70,6 +74,7 @@ def db_version() -> None:
     """
     general("Checking database version")
     alembic_migration.db_version()
+
 
 @main.command(name="upgrade-db", help="Upgrade the database to a specific version")
 @click.argument("version", type=str, default="head")
@@ -85,6 +90,7 @@ def upgrade_db(version: str) -> None:
     general(f"Upgrading database to version: {version}")
     alembic_migration.upgrade(version)
     success(f"Database upgraded to version: {version}")
+
 
 @main.command(name="downgrade-db", help="Downgrade the database to a specific version")
 @click.argument("version", type=str)

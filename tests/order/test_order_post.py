@@ -16,12 +16,7 @@ from fastapi_ecom.utils.basic_auth import security
         pytest.param(
             {
                 "order_date": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
-                "order_items": [
-                   {
-                     "product_id": "3250fcbe",
-                     "quantity": 5
-                   }
-                ]
+                "order_items": [{"product_id": "3250fcbe", "quantity": 5}],
             },
             True,
             id="ORDER Post Endpoint - 201 Created",
@@ -29,27 +24,22 @@ from fastapi_ecom.utils.basic_auth import security
         pytest.param(
             {
                 "order_date": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
-                "order_items": [
-                   {
-                     "product_id": "xxxxxxx",
-                     "quantity": 5
-                   }
-                ]
+                "order_items": [{"product_id": "xxxxxxx", "quantity": 5}],
             },
             False,
             id="ORDER Post Endpoint - Fail to place order for product which doesn't exist",
         ),
-    ]
+    ],
 )
 async def test_create_order(
-        test_app: FastAPI,
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        payload: dict,
-        present: bool
+    test_app: FastAPI,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    mocker: MockerFixture,
+    payload: dict,
+    present: bool,
 ) -> None:
     """
     Test the `create` endpoint of the Order API.
@@ -76,7 +66,7 @@ async def test_create_order(
     """
     Perform the action of visiting the endpoint
     """
-    response = await client.post("/api/v1/order/create", json = payload)
+    response = await client.post("/api/v1/order/create", json=payload)
 
     """
     Test the response
@@ -88,18 +78,18 @@ async def test_create_order(
             "order": {
                 "order_date": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "uuid": "abcd1234",
-                "total_price": payload["order_items"][0]["quantity"]*100.0,  #Price from product test data
-                "user_id": "2c92f0e8",  #UUID from customer test data
+                "total_price": payload["order_items"][0]["quantity"] * 100.0,  # Price from product test data
+                "user_id": "2c92f0e8",  # UUID from customer test data
                 "order_items": [
                     {
                         "product_id": payload["order_items"][0]["product_id"],
                         "quantity": payload["order_items"][0]["quantity"],
-                        "price": 100.0,  #Price from product test data
-                        "uuid": "abcd1234"
+                        "price": 100.0,  # Price from product test data
+                        "uuid": "abcd1234",
                     }
-                ]
-            }
+                ],
+            },
         }
     else:
         assert response.status_code == 404
-        assert response.json()["detail"] == f"Product with ID: {payload["order_items"][0]["product_id"]} does not exist."
+        assert response.json()["detail"] == f"Product with ID: {payload['order_items'][0]['product_id']} does not exist."

@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
@@ -6,19 +5,8 @@ from pytest_mock import MockerFixture
 from tests.customer import _test_data_customer
 
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fetch email of the authenticated customer")
-    ]
-)
-async def test_get_customer_me(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        _: None
-) -> None:
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fetch email of the authenticated customer")])
+async def test_get_customer_me(client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, _: None) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Customer API.
 
@@ -45,22 +33,13 @@ async def test_get_customer_me(
     assert response.status_code == 200
     assert response.json() == {
         "action": "get",
-        "email": data["delete_customer"].email  #The override for the authentication uses this email
+        "email": data["delete_customer"].email,  # The override for the authentication uses this email
     }
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fail authentication for customer")
-    ]
-)
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fail authentication for customer")])
 async def test_get_customer_me_fail_pwd(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        _: None
+    client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, mocker: MockerFixture, _: None
 ) -> None:
     """
     Test the `get` endpoint for the incorrectly authenticated customer of the Customer API.
@@ -89,18 +68,9 @@ async def test_get_customer_me_fail_pwd(
     assert response.status_code == 401
     assert response.json()["detail"] == "Not Authenticated"
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fail authentication for customer with no user")
-    ]
-)
-async def test_get_customer_me_fail_no_user(
-        client: AsyncClient,
-        db_test_create: None,
-        apply_security_override: None,
-        _: None
-) -> None:
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fail authentication for customer with no user")])
+async def test_get_customer_me_fail_no_user(client: AsyncClient, db_test_create: None, apply_security_override: None, _: None) -> None:
     """
     Test the `get` endpoint for the incorrectly authenticated customer of the Customer API.
 
@@ -122,33 +92,26 @@ async def test_get_customer_me_fail_no_user(
     assert response.status_code == 401
     assert response.json()["detail"] == "Not Authenticated"
 
+
 @pytest.mark.parametrize(
     "mock_oidc_user",
     [
         pytest.param(
-            {
-                "email": "dummy_user@example.com",
-                "name": "dummy user",
-                "sub": "dummy_user_sub"
-            },
-            id="CUSTOMER GET Endpoint - Fetch email of the `dummy` authenticated customer with oidc"
+            {"email": "dummy_user@example.com", "name": "dummy user", "sub": "dummy_user_sub"},
+            id="CUSTOMER GET Endpoint - Fetch email of the `dummy` authenticated customer with oidc",
         ),
         pytest.param(
-            {
-                "email": "delete@example.com",
-                "name": "delete user",
-                "sub": "delete_sub"
-            },
-            id="CUSTOMER GET Endpoint - Fetch email of the `delete` authenticated customer with oidc"
-        )
-    ]
+            {"email": "delete@example.com", "name": "delete user", "sub": "delete_sub"},
+            id="CUSTOMER GET Endpoint - Fetch email of the `delete` authenticated customer with oidc",
+        ),
+    ],
 )
 async def test_get_customer_me_oauth(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        mock_oidc_user,
-        mocker: MockerFixture,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    mock_oidc_user,
+    mocker: MockerFixture,
 ) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Business API.
@@ -180,23 +143,21 @@ async def test_get_customer_me_oauth(
     Test the response
     """
     assert response.status_code == 200
-    assert response.json() == {
-        "action": "get",
-        "email": f"{mock_oidc_user["email"]}"
-    }
+    assert response.json() == {"action": "get", "email": f"{mock_oidc_user['email']}"}
+
 
 @pytest.mark.parametrize(
     "token",
     [
         pytest.param("Bearer", id="CUSTOMER GET Endpoint - Invalid Bearer token length"),
-        pytest.param("Dummy token", id="CUSTOMER GET Endpoint - Dummy Bearer token")
-    ]
+        pytest.param("Dummy token", id="CUSTOMER GET Endpoint - Dummy Bearer token"),
+    ],
 )
 async def test_get_customer_me_oauth_token_issue(
-        client: AsyncClient,
-        db_test_create: None,
-        token: str,
-        mocker: MockerFixture,
+    client: AsyncClient,
+    db_test_create: None,
+    token: str,
+    mocker: MockerFixture,
 ) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Business API.
@@ -224,17 +185,13 @@ async def test_get_customer_me_oauth_token_issue(
     assert response.status_code == 401
     assert response.json()["detail"] == "Not Authenticated"
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fail to get user info from oauth provider")
-    ]
-)
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fail to get user info from oauth provider")])
 async def test_get_customer_me_oauth_fail(
-        client: AsyncClient,
-        db_test_create: None,
-        mocker: MockerFixture,
-        _,
+    client: AsyncClient,
+    db_test_create: None,
+    mocker: MockerFixture,
+    _,
 ) -> None:
     """
     Test the `get` endpoint for the currently authenticated customer of the Business API.
@@ -266,17 +223,9 @@ async def test_get_customer_me_oauth_fail(
     assert response.status_code == 401
     assert response.json()["detail"] == "Not Authenticated"
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fetch all the customers")
-    ]
-)
-async def test_get_customers(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        _: None) -> None:
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fetch all the customers")])
+async def test_get_customers(client: AsyncClient, db_test_create: None, db_test_data: None, _: None) -> None:
     """
     Test the `get` endpoint for fetching all the customers of the Customer API.
 
@@ -297,8 +246,9 @@ async def test_get_customers(
             "addr_line_1": customer.addr_line_1,
             "addr_line_2": customer.addr_line_2,
             "city": customer.city,
-            "state": customer.state
-        } for customer in data.values()
+            "state": customer.state,
+        }
+        for customer in data.values()
     ]
 
     """
@@ -310,17 +260,10 @@ async def test_get_customers(
     Test the response
     """
     assert response.status_code == 200
-    assert response.json() == {
-        "action": "get",
-        "customers": customers
-    }
+    assert response.json() == {"action": "get", "customers": customers}
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fail to fetch customer")
-    ]
-)
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fail to fetch customer")])
 async def test_get_customers_fail(
     client: AsyncClient,
     db_test_create: None,

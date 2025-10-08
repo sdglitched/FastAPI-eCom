@@ -5,6 +5,7 @@ class OrderDetailsBase(BaseModel):
     """
     Base model for order detail-related schemas, providing shared configurations.
     """
+
     class Config:
         """
         This class enables attribute mapping from database model instances to Pydantic models
@@ -14,6 +15,7 @@ class OrderDetailsBase(BaseModel):
                                input data directly (i.e., allow assigning to the model attributes
                                directly without validation).
         """
+
         from_attributes = True
 
 
@@ -24,6 +26,7 @@ class OrderDetailsCreate(OrderDetailsBase):
     :ivar product_id: UUID of the product associated with the order detail.
     :ivar quantity: Number of units of the product in the order.
     """
+
     product_id: str
     quantity: int
 
@@ -36,6 +39,7 @@ class OrderDetailsView(OrderDetailsCreate):
 
     :ivar price (float): Price of the product at the time of the order.
     """
+
     price: float
 
 
@@ -46,6 +50,7 @@ class OrderDetailsViewInternal(OrderDetailsView):
 
     :ivar uuid: Unique identifier for the order detail.
     """
+
     uuid: str
 
 

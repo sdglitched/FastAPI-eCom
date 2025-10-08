@@ -29,6 +29,7 @@ class Customer(baseobjc, UUIDCreatableMixin, DateCreatableMixin, DateUpdateableM
     :cvar created_via_oauth: Flag indicating if the customer account is created using OAuth.
     :cvar orders: Relationship to the `Order` model, representing orders placed by the customer.
     """
+
     __tablename__ = "customers"
 
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
