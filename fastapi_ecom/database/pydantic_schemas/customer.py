@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -10,6 +9,7 @@ class CustomerBase(BaseModel):
     """
     Base model for customer-related schemas, providing shared configurations.
     """
+
     class Config:
         """
         This class enables attribute mapping from database model instances to Pydantic models
@@ -19,6 +19,7 @@ class CustomerBase(BaseModel):
                                input data directly (i.e., allow assigning to the model attributes
                                directly without validation).
         """
+
         from_attributes = True
 
 
@@ -33,12 +34,13 @@ class CustomerView(CustomerBase):
     :ivar city: City in which the customer resides.
     :ivar state: State in which the customer resides.
     """
+
     email: EmailStr
     name: str
-    addr_line_1: Optional[str]
-    addr_line_2: Optional[str]
-    city: Optional[str]
-    state: Optional[str]
+    addr_line_1: str | None
+    addr_line_2: str | None
+    city: str | None
+    state: str | None
 
 
 class CustomerCreate(CustomerView):
@@ -48,6 +50,7 @@ class CustomerCreate(CustomerView):
 
     :ivar password: Password for the customer account.
     """
+
     password: str
 
 
@@ -63,13 +66,14 @@ class CustomerUpdate(BaseModel):
     :ivar state: Updated state of the customer, optional.
     :ivar password: Updated password for the customer account, optional.
     """
-    email: Optional[EmailStr] = ""
-    name: Optional[str] = ""
-    addr_line_1: Optional[str] = ""
-    addr_line_2: Optional[str] = ""
-    city: Optional[str] = ""
-    state: Optional[str] = ""
-    password: Optional[str] = ""
+
+    email: EmailStr | None = ""
+    name: str | None = ""
+    addr_line_1: str | None = ""
+    addr_line_2: str | None = ""
+    city: str | None = ""
+    state: str | None = ""
+    password: str | None = ""
 
 
 class CustomerInternal(CustomerCreate):
@@ -82,6 +86,7 @@ class CustomerInternal(CustomerCreate):
     :ivar is_verified: Indicates whether the customer has been verified, defaults to False.
     :ivar creation_datetime: Timestamp of when the customer was created.
     """
+
     id: int
     uuid: str
     is_verified: bool = False
@@ -94,6 +99,7 @@ class CustomerResult(APIResult):
 
     :ivar customer: Contains details of a single customer.
     """
+
     customer: CustomerView
 
 
@@ -103,4 +109,5 @@ class CustomerManyResult(APIResult):
 
     :ivar customers: List of customer details.
     """
+
     customers: list[CustomerView] = []

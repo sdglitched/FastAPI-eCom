@@ -41,6 +41,7 @@ def make_database() -> None:
     command.stamp(alembic_config, "head")
     success("Database marked at migration head successfully")
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to provide a database session for FastAPI routes.

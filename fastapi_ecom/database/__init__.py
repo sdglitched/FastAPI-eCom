@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from sqlalchemy import URL, Engine, create_engine
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
@@ -11,10 +10,10 @@ from fastapi_ecom.config import config
 baseobjc = declarative_base()
 
 # Path of alembic configuration file
-alempath = str(Path(str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve()),"alembic.ini").resolve())
+alempath = str(Path(str(Path(str(Path(__file__).parent.resolve().parent.resolve()), "migrations").resolve()), "alembic.ini").resolve())
 
 # Migration path for alembic configuration
-migrpath = str(Path(str(Path(__file__).parent.resolve().parent.resolve()),"migrations").resolve())
+migrpath = str(Path(str(Path(__file__).parent.resolve().parent.resolve()), "migrations").resolve())
 
 
 def get_database_url(engine: str = "async") -> URL:
@@ -27,26 +26,27 @@ def get_database_url(engine: str = "async") -> URL:
     """
     if engine == "sync":
         SQLALCHEMY_DATABASE_URL = URL.create(
-            drivername = "postgresql+psycopg2",
-            username = config.username,
-            password = config.password,
-            host = config.dtbsbhost,
-            port = config.dtbsbport,
-            database = config.database,
+            drivername="postgresql+psycopg2",
+            username=config.username,
+            password=config.password,
+            host=config.dtbsbhost,
+            port=config.dtbsbport,
+            database=config.database,
         )
         return SQLALCHEMY_DATABASE_URL
 
     SQLALCHEMY_DATABASE_URL = URL.create(
-        drivername = config.dtbsdriver,
-        username = config.username,
-        password = config.password,
-        host = config.dtbsbhost,
-        port = config.dtbsbport,
-        database = config.database,
+        drivername=config.dtbsdriver,
+        username=config.username,
+        password=config.password,
+        host=config.dtbsbhost,
+        port=config.dtbsbport,
+        database=config.database,
     )
     return SQLALCHEMY_DATABASE_URL
 
-def get_engine(engine: str = "async") -> Union[Engine, AsyncEngine]:
+
+def get_engine(engine: str = "async") -> Engine | AsyncEngine:
     """
     Create a session engine based on the specified engine type.
 
@@ -55,13 +55,14 @@ def get_engine(engine: str = "async") -> Union[Engine, AsyncEngine]:
     :return: An SQLAlchemy engine instance, either synchronous or asynchronous.
     """
     if engine == "sync":
-        SQLALCHEMY_DATABASE_URL = get_database_url(engine = "sync")
+        SQLALCHEMY_DATABASE_URL = get_database_url(engine="sync")
         sync_engine = create_engine(url=SQLALCHEMY_DATABASE_URL, echo=config.confecho)
         return sync_engine
 
     SQLALCHEMY_DATABASE_URL = get_database_url()
     async_engine = create_async_engine(url=SQLALCHEMY_DATABASE_URL, echo=config.confecho)
     return async_engine
+
 
 def get_async_session() -> async_sessionmaker:
     """

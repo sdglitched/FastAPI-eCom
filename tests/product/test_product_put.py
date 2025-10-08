@@ -16,7 +16,7 @@ from tests.product import _test_data_product
                 "category": "updated test",
                 "mfg_date": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "exp_date": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
-                "price": 1950.05
+                "price": 1950.05,
             },
             "5c1c48fb",
             "10677ef1",
@@ -30,24 +30,24 @@ from tests.product import _test_data_product
                 "category": "",
                 "mfg_date": "1900-01-01 00:00:00+00:00",
                 "exp_date": "1900-01-01 00:00:00+00:00",
-                "price": 0.05
+                "price": 0.05,
             },
             "5c1c48fb",
             "4e6c9aea",
             False,
             id="PRODUCT PUT Endpoint - Fails to find the specific product of currently authenticated business",
-        )
-    ]
+        ),
+    ],
 )
 async def test_update_product(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        payload: dict[str, str],
-        business_id: str,
-        product_id: str,
-        present: bool
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    payload: dict[str, str],
+    business_id: str,
+    product_id: str,
+    present: bool,
 ) -> None:
     """
     Test the `create` endpoint of the Product API.
@@ -78,13 +78,13 @@ async def test_update_product(
                 "exp_date": prod.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "price": prod.price,
                 "uuid": prod.uuid,
-                "business_id": prod.business_id
+                "business_id": prod.business_id,
             }
 
     """
     Perform the action of visiting the endpoint
     """
-    response = await client.put(f"/api/v1/product/update/uuid/{product_id}", json = payload)
+    response = await client.put(f"/api/v1/product/update/uuid/{product_id}", json=payload)
 
     """
     Test the response
@@ -102,7 +102,7 @@ async def test_update_product(
                 "price": payload["price"],
                 "uuid": product["uuid"],
                 "business_id": product["business_id"],
-            }
+            },
         }
     else:
         assert response.status_code == 404

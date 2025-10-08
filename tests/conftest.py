@@ -1,6 +1,5 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from pathlib import PosixPath
-from typing import Callable
 
 import pytest
 from click.testing import CliRunner
@@ -29,6 +28,7 @@ def runner() -> CliRunner:
     """
     return CliRunner()
 
+
 @pytest.fixture
 async def test_app() -> FastAPI:
     """
@@ -37,6 +37,7 @@ async def test_app() -> FastAPI:
     :return: FastAPI app instance.
     """
     return app
+
 
 @pytest.fixture
 async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
@@ -50,6 +51,7 @@ async def client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
 
 @pytest.fixture
 async def get_test_database_url(tmp_path: PosixPath, mocker: MockerFixture) -> URL:
@@ -69,6 +71,7 @@ async def get_test_database_url(tmp_path: PosixPath, mocker: MockerFixture) -> U
     cnfg.confecho = False
     return SQLALCHEMY_DATABASE_URL
 
+
 @pytest.fixture
 async def db_test_create(get_test_database_url: URL) -> None:
     """
@@ -83,6 +86,7 @@ async def db_test_create(get_test_database_url: URL) -> None:
     async with async_engine.begin() as conn:
         await conn.run_sync(baseobjc.metadata.drop_all)  # Ensure no old tables persist
         await conn.run_sync(baseobjc.metadata.create_all)
+
 
 @pytest.fixture
 async def db_test_data(get_test_database_url: URL) -> None:
@@ -108,6 +112,7 @@ async def db_test_data(get_test_database_url: URL) -> None:
 
     await db.commit()
 
+
 @pytest.fixture
 async def override_security(mocker: MockerFixture) -> Callable[[], HTTPBasicCredentials]:
     """
@@ -120,6 +125,7 @@ async def override_security(mocker: MockerFixture) -> Callable[[], HTTPBasicCred
     mock_credentials = HTTPBasicCredentials(username="delete@example.com", password="delete")
     mocker.patch("fastapi.security.http.HTTPBasic.__call__", return_value=mock_credentials)
     return lambda: mock_credentials
+
 
 @pytest.fixture
 async def apply_security_override(test_app, override_security) -> None:

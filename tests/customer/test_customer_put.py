@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 
@@ -14,7 +13,7 @@ from httpx import AsyncClient
                 "addr_line_2": "xyz",
                 "city": "aaa",
                 "state": "bbb",
-                "password": "update_customer"
+                "password": "update_customer",
             },
             "update",
             id="CUSTOMER PUT Endpoint - Updates currently authenticated customer",
@@ -27,20 +26,15 @@ from httpx import AsyncClient
                 "addr_line_2": "xyz",
                 "city": "aaa",
                 "state": "bbb",
-                "password": "duplicate_customer"
+                "password": "duplicate_customer",
             },
             "duplicate",
             id="CUSTOMER PUT Endpoint - 409 Conflict",
-        )
-    ]
+        ),
+    ],
 )
 async def test_update_customer(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        payload: dict[str, str],
-        type: str
+    client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, payload: dict[str, str], type: str
 ) -> None:
     """
     Test the `put` endpoint for updating the currently authenticated customer of the Customer API.
@@ -57,7 +51,7 @@ async def test_update_customer(
     """
     Perform the action of visiting the endpoint
     """
-    response = await client.put("/api/v1/customer/update/me", json = payload)
+    response = await client.put("/api/v1/customer/update/me", json=payload)
 
     """
     Test the response
@@ -72,8 +66,8 @@ async def test_update_customer(
                 "addr_line_1": payload["addr_line_1"],
                 "addr_line_2": payload["addr_line_2"],
                 "city": payload["city"],
-                "state": payload["state"]
-            }
+                "state": payload["state"],
+            },
         }
     else:
         assert response.status_code == 409

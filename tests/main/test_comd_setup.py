@@ -8,20 +8,8 @@ from sqlalchemy import URL
 from fastapi_ecom.main import main
 
 
-@pytest.mark.parametrize(
-    "cmd, code",
-    [
-        pytest.param("setup", 0, id="MAIN Function - SETUP - Setup the database")
-    ]
-)
-def test_comd_setup(
-        runner: CliRunner,
-        get_test_database_url: URL,
-        tmp_path: PosixPath,
-        mocker: MockerFixture,
-        cmd: str,
-        code: int
-) -> None:
+@pytest.mark.parametrize("cmd, code", [pytest.param("setup", 0, id="MAIN Function - SETUP - Setup the database")])
+def test_comd_setup(runner: CliRunner, get_test_database_url: URL, tmp_path: PosixPath, mocker: MockerFixture, cmd: str, code: int) -> None:
     """
     Test the functionality cli `setup` command.
 

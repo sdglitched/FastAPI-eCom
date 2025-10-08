@@ -18,23 +18,18 @@ from fastapi_ecom.utils.logging_setup import failure, general, success, warning
 
 server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
 
-oidc = OpenIdConnect(
-    openIdConnectUrl=server_metadata_url,
-    scheme_name="OpenID Connect",
-    auto_error=False
-)
+oidc = OpenIdConnect(openIdConnectUrl=server_metadata_url, scheme_name="OpenID Connect", auto_error=False)
 
 oauth = OAuth()
 
 oauth.register(
-    name = "google",
-    client_id = config.GOOGLE_CLIENT_ID,
-    client_secret = config.GOOGLE_CLIENT_SECRET,
-    server_metadata_url = server_metadata_url,
-    client_kwargs = {
-        'scope': 'openid email profile'
-    }
+    name="google",
+    client_id=config.GOOGLE_CLIENT_ID,
+    client_secret=config.GOOGLE_CLIENT_SECRET,
+    server_metadata_url=server_metadata_url,
+    client_kwargs={"scope": "openid email profile"},
 )
+
 
 class OIDCUser(BaseModel):
     """
@@ -47,6 +42,7 @@ class OIDCUser(BaseModel):
     :cvar name: Full name of the authenticated user.
     :cvar sub: Subject identifier from the OIDC provider.
     """
+
     email: str
     name: str | None = None
     sub: str
@@ -55,6 +51,7 @@ class OIDCUser(BaseModel):
     def from_userinfo(cls, userinfo: UserInfo) -> "OIDCUser":
         fields = {field: userinfo[field] for field in cls.model_fields if field in userinfo}
         return cls(**fields)
+
 
 async def current_user(token: str = Depends(oidc)) -> OIDCUser | None:
     """
@@ -84,6 +81,7 @@ async def current_user(token: str = Depends(oidc)) -> OIDCUser | None:
         warning("OAuth token validation failed")
         return None
     return OIDCUser.from_userinfo(userinfo)
+
 
 async def verify_oauth_customer_cred(oidc: OIDCUser = Depends(current_user), db: AsyncSession = Depends(get_db)) -> Customer:
     """
@@ -117,13 +115,10 @@ async def verify_oauth_customer_cred(oidc: OIDCUser = Depends(current_user), db:
         db.add(customer_by_email)
         try:
             await db.flush()
-        except Exception as expt:  #pragma: no cover
+        except Exception as expt:  # pragma: no cover
             # HTTP status code 500 is already tested in other parts of the codebase
             failure("Failed to update customer details in database due to unexpected error")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     else:
         query = select(Customer).where(Customer.oauth_email == oidc.email).options(selectinload("*"))
         result = await db.execute(query)
@@ -131,27 +126,25 @@ async def verify_oauth_customer_cred(oidc: OIDCUser = Depends(current_user), db:
         if not customer_by_email:
             general(f"Creating new customer via OAuth: {oidc.email}")
             customer_by_email = Customer(
-                email = oidc.email,
-                name = oidc.name,
-                uuid = uuid4().hex[0:8],
-                is_verified = True,  # OAuth emails are pre-verified
-                oauth_provider = "google",
-                oauth_id = oidc.sub,
-                oauth_email = oidc.email,
-                created_via_oauth = True
+                email=oidc.email,
+                name=oidc.name,
+                uuid=uuid4().hex[0:8],
+                is_verified=True,  # OAuth emails are pre-verified
+                oauth_provider="google",
+                oauth_id=oidc.sub,
+                oauth_email=oidc.email,
+                created_via_oauth=True,
             )
             db.add(customer_by_email)
             try:
                 await db.flush()
-            except Exception as expt:  #pragma: no cover
+            except Exception as expt:  # pragma: no cover
                 # HTTP status code 500 is already tested in other parts of the codebase
                 failure("Failed to create customer account in database due to unexpected error")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="An unexpected database error occurred."
-                ) from expt
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     success(f"Customer OAuth authentication successful: {oidc.email}")
     return customer_by_email
+
 
 async def verify_oauth_business_cred(oidc: OIDCUser = Depends(current_user), db: AsyncSession = Depends(get_db)) -> Business:
     """
@@ -185,13 +178,10 @@ async def verify_oauth_business_cred(oidc: OIDCUser = Depends(current_user), db:
         db.add(business_by_email)
         try:
             await db.flush()
-        except Exception as expt:  #pragma: no cover
+        except Exception as expt:  # pragma: no cover
             # HTTP status code 500 is already tested in other parts of the codebase
             failure("Failed to update business details in database due to unexpected error")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     else:
         query = select(Business).where(Business.oauth_email == oidc.email).options(selectinload("*"))
         result = await db.execute(query)
@@ -199,24 +189,21 @@ async def verify_oauth_business_cred(oidc: OIDCUser = Depends(current_user), db:
         if not business_by_email:
             general(f"Creating new business via OAuth: {oidc.email}")
             business_by_email = Business(
-                email = oidc.email,
-                name = oidc.name,
-                uuid = uuid4().hex[0:8],
-                is_verified = True,  # OAuth emails are pre-verified
-                oauth_provider = "google",
-                oauth_id = oidc.sub,
-                oauth_email = oidc.email,
-                created_via_oauth = True
+                email=oidc.email,
+                name=oidc.name,
+                uuid=uuid4().hex[0:8],
+                is_verified=True,  # OAuth emails are pre-verified
+                oauth_provider="google",
+                oauth_id=oidc.sub,
+                oauth_email=oidc.email,
+                created_via_oauth=True,
             )
             db.add(business_by_email)
             try:
                 await db.flush()
-            except Exception as expt:  #pragma: no cover
+            except Exception as expt:  # pragma: no cover
                 # HTTP status code 500 is already tested in other parts of the codebase
                 failure("Failed to create business account in database due to unexpected error")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="An unexpected database error occurred."
-                ) from expt
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     success(f"Business OAuth authentication successful: {oidc.email}")
     return business_by_email

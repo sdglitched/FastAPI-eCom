@@ -2,16 +2,8 @@ import pytest
 from httpx import AsyncClient
 
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="ROOT GET Endpoint - Fetch the root endpoint of this application")
-    ]
-)
-async def test_root(
-    client: AsyncClient,
-    _: None
-) -> None:
+@pytest.mark.parametrize("_", [pytest.param(None, id="ROOT GET Endpoint - Fetch the root endpoint of this application")])
+async def test_root(client: AsyncClient, _: None) -> None:
     """
     Test the root ('/') endpoint.
 
@@ -31,5 +23,5 @@ async def test_root(
     assert response.json() == {
         "title": "FastAPI ECOM",
         "description": "E-Commerce API for businesses and end users using FastAPI.",
-        "version": "0.1.0"
+        "version": "0.1.0",
     }

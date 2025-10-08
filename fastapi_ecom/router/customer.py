@@ -23,6 +23,7 @@ from fastapi_ecom.utils.logging_setup import failure, general, success, warning
 
 router = APIRouter(prefix="/customer")
 
+
 @router.post("/create", status_code=status.HTTP_201_CREATED, response_model=CustomerResult, tags=["customer"])
 async def create_customer(customer: CustomerCreate, db: AsyncSession = Depends(get_db)) -> CustomerResult:
     """
@@ -40,16 +41,16 @@ async def create_customer(customer: CustomerCreate, db: AsyncSession = Depends(g
              serialized using the `BusinessView` schema.
     """
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(customer.password.strip().encode('utf-8'), salt)
+    hashed_password = bcrypt.hashpw(customer.password.strip().encode("utf-8"), salt)
     db_customer = Customer(
-        email = customer.email.strip(),
-        password = hashed_password.decode('utf-8'),
-        name = customer.name.strip(),
-        addr_line_1 = customer.addr_line_1.strip(),
-        addr_line_2 = customer.addr_line_2.strip(),
-        city = customer.city.strip(),
-        state = customer.state.strip(),
-        uuid = uuid4().hex[0:8]  # Assign UUID manually; One UUID per transaction
+        email=customer.email.strip(),
+        password=hashed_password.decode("utf-8"),
+        name=customer.name.strip(),
+        addr_line_1=customer.addr_line_1.strip(),
+        addr_line_2=customer.addr_line_2.strip(),
+        city=customer.city.strip(),
+        state=customer.state.strip(),
+        uuid=uuid4().hex[0:8],  # Assign UUID manually; One UUID per transaction
     )
     general(f"Adding account for customer in database: {customer.email}")
     db.add(db_customer)
@@ -57,24 +58,16 @@ async def create_customer(customer: CustomerCreate, db: AsyncSession = Depends(g
         await db.flush()
     except IntegrityError as expt:
         failure(f"Customer account creation failed - Uniqueness constraint violation for email: {customer.email}")
-        raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Uniqueness constraint failed - Please try again"
-            ) from expt
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Uniqueness constraint failed - Please try again") from expt
     except Exception as expt:
         failure(f"Customer account creation failed with unexpected error for email: {customer.email}")
-        raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     success(f"Customer account created successfully with email: {customer.email}")
-    return {
-        "action": "post",
-        "customer": CustomerView.model_validate(db_customer).model_dump()
-    }
+    return {"action": "post", "customer": CustomerView.model_validate(db_customer).model_dump()}
+
 
 @router.get("/me", status_code=status.HTTP_200_OK, tags=["customer"])
-async def get_customer_me(customer_auth = Depends(verify_cust_cred)) -> dict[str, str]:
+async def get_customer_me(customer_auth=Depends(verify_cust_cred)) -> dict[str, str]:
     """
     Endpoint to fetch the email of the currently authenticated customer.
 
@@ -83,16 +76,14 @@ async def get_customer_me(customer_auth = Depends(verify_cust_cred)) -> dict[str
     :return: Dictionary containing the action type and the authenticated customer's email.
     """
     general(f"Customer authentication successful for: {customer_auth.email}")
-    return {
-        "action": "get",
-        "email": customer_auth.email
-    }
+    return {"action": "get", "email": customer_auth.email}
+
 
 @router.get("/search", status_code=status.HTTP_200_OK, response_model=CustomerManyResult, tags=["customer"])
 async def get_customers(
     skip: int = Query(0, ge=0, description="Number of records to skip (must be between 0 and int64)"),
     limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return (must be between 1 and 100)"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> CustomerManyResult:
     """
     Endpoint fetches a paginated list of customers from the database.
@@ -113,18 +104,13 @@ async def get_customers(
     customers = result.scalars().all()
     if not customers:
         warning("No customers found in database")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No customer present in database"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No customer present in database")
     success(f"Found {len(customers)} customers")
-    return {
-        "action": "get",
-        "customers": [CustomerView.model_validate(customer).model_dump() for customer in customers]
-    }
+    return {"action": "get", "customers": [CustomerView.model_validate(customer).model_dump() for customer in customers]}
+
 
 @router.delete("/delete/me", status_code=status.HTTP_202_ACCEPTED, response_model=CustomerResult, tags=["customer"])
-async def delete_customer(db: AsyncSession = Depends(get_db), customer_auth = Depends(verify_cust_cred)) -> CustomerResult:
+async def delete_customer(db: AsyncSession = Depends(get_db), customer_auth=Depends(verify_cust_cred)) -> CustomerResult:
     """
     Endpoint for an authenticated customer to delete its own record.
 
@@ -146,25 +132,20 @@ async def delete_customer(db: AsyncSession = Depends(get_db), customer_auth = De
     await db.execute(query)
     try:
         await db.flush()
-    except Exception as expt:  #pragma: no cover
+    except Exception as expt:  # pragma: no cover
         """
         This part of the code cannot be tested as this endpoint performs multiple database
         interactions due to which mocking one part wont produce the desired result. Thus,
         we will keep it uncovered until a alternative can be made for testing this exception block.
         """
         failure(f"Customer account deletion failed for: {customer_auth.email}")
-        raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected database error occurred."
-            ) from expt
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     success(f"Customer account deleted successfully: {customer_auth.email}")
-    return {
-        "action": "delete",
-        "customer": CustomerView.model_validate(customer_to_delete).model_dump()
-    }
+    return {"action": "delete", "customer": CustomerView.model_validate(customer_to_delete).model_dump()}
+
 
 @router.put("/update/me", status_code=status.HTTP_202_ACCEPTED, response_model=CustomerResult, tags=["customer"])
-async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(get_db), customer_auth = Depends(verify_cust_cred)) -> CustomerResult:
+async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(get_db), customer_auth=Depends(verify_cust_cred)) -> CustomerResult:
     """
     Endpoint for an authenticated customer to update its own record.
 
@@ -186,13 +167,13 @@ async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(g
     is_updated = False
     cus_cols = ["email", "name", "addr_line_1", "addr_line_2", "city", "state"]
     for item in cus_cols:
-      if getattr(customer, item) != "":
-        setattr(customer_to_update, item, getattr(customer, item).strip())
-        is_updated = True
+        if getattr(customer, item) != "":
+            setattr(customer_to_update, item, getattr(customer, item).strip())
+            is_updated = True
     if customer.password != "":
         salt = bcrypt.gensalt()
-        hashed_password = bcrypt.hashpw(customer.password.encode('utf-8'), salt)
-        customer_to_update.password = hashed_password.decode('utf-8')
+        hashed_password = bcrypt.hashpw(customer.password.encode("utf-8"), salt)
+        customer_to_update.password = hashed_password.decode("utf-8")
         is_updated = True
     if is_updated:
         customer_to_update.update_date = datetime.now(timezone.utc)
@@ -200,23 +181,14 @@ async def update_customer(customer: CustomerUpdate, db: AsyncSession = Depends(g
             await db.flush()
         except IntegrityError as expt:
             failure(f"Customer update failed - Uniqueness constraint violation for: {customer_email}")
-            raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Uniqueness constraint failed - Please try again"
-                ) from expt
-        except Exception as expt:  #pragma: no cover
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Uniqueness constraint failed - Please try again") from expt
+        except Exception as expt:  # pragma: no cover
             """
             This part of the code cannot be tested as this endpoint performs multiple database
             interactions due to which mocking one part wont produce the desired result. Thus,
             we will keep it uncovered until a alternative can be made for testing this exception block.
             """
             failure(f"Customer update failed with unexpected error for: {customer_email}")
-            raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="An unexpected database error occurred."
-                ) from expt
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected database error occurred.") from expt
     success(f"Customer details updated successfully: {customer_email}")
-    return {
-        "action": "put",
-        "customer": CustomerView.model_validate(customer_to_update).model_dump()
-    }
+    return {"action": "put", "customer": CustomerView.model_validate(customer_to_update).model_dump()}

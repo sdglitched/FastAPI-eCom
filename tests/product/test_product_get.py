@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi import FastAPI
 from fastapi.security import HTTPBasicCredentials
@@ -9,18 +8,8 @@ from fastapi_ecom.utils.basic_auth import security
 from tests.product import _test_data_product
 
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="PRODUCT GET Endpoint - Fetch all the products")
-    ]
-)
-async def test_get_products(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        _: None
-) -> None:
+@pytest.mark.parametrize("_", [pytest.param(None, id="PRODUCT GET Endpoint - Fetch all the products")])
+async def test_get_products(client: AsyncClient, db_test_create: None, db_test_data: None, _: None) -> None:
     """
     Test the `get` endpoint for fetching all the products of the Product API.
 
@@ -42,7 +31,8 @@ async def test_get_products(
             "mfg_date": product.mfg_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "exp_date": product.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "price": product.price,
-        } for product in data.values()
+        }
+        for product in data.values()
     ]
 
     """
@@ -54,17 +44,10 @@ async def test_get_products(
     Test the response
     """
     assert response.status_code == 200
-    assert response.json() == {
-        "action": "get",
-        "products": products
-    }
+    assert response.json() == {"action": "get", "products": products}
 
-@pytest.mark.parametrize(
-    "_",
-    [
-        pytest.param(None, id="CUSTOMER GET Endpoint - Fail to fetch product")
-    ]
-)
+
+@pytest.mark.parametrize("_", [pytest.param(None, id="CUSTOMER GET Endpoint - Fail to fetch product")])
 async def test_get_products_fail(
     client: AsyncClient,
     db_test_create: None,
@@ -87,21 +70,16 @@ async def test_get_products_fail(
     assert response.status_code == 404
     assert response.json()["detail"] == "No product present in database"
 
+
 @pytest.mark.parametrize(
     "text, present",
     [
         pytest.param("Second", True, id="PRODUCT GET Endpoint - Fetch single matching product"),
         pytest.param("Product", True, id="PRODUCT GET Endpoint - Fetch all the matching products"),
         pytest.param("xxxxyyyy", False, id="PRODUCT GET Endpoint - Fail to fetch any matching products"),
-    ]
+    ],
 )
-async def test_get_product_by_text(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        text: str,
-        present: bool
-) -> None:
+async def test_get_product_by_text(client: AsyncClient, db_test_create: None, db_test_data: None, text: str, present: bool) -> None:
     """
     Test the `get` endpoint for fetching a single or all the matching products of the Product API.
 
@@ -125,7 +103,8 @@ async def test_get_product_by_text(
             "mfg_date": product.mfg_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "exp_date": product.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "price": product.price,
-        } for product in data.values()
+        }
+        for product in data.values()
         if (text.lower() in product.name.lower()) or (text.lower() in product.description.lower())
     ]
 
@@ -139,30 +118,28 @@ async def test_get_product_by_text(
     """
     if present:
         assert response.status_code == 200
-        assert response.json() == {
-            "action": "get",
-            "products": products
-        }
+        assert response.json() == {"action": "get", "products": products}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "No such product present in database"
+
 
 @pytest.mark.parametrize(
     "business_id, present",
     [
         pytest.param("d76a11f2", True, id="PRODUCT GET Endpoint - Fetch all the products associated with the authenticated business"),
-        pytest.param("fd4a8cac", False, id="PRODUCT GET Endpoint - Fetch all the products associated with the authenticated business")
-    ]
+        pytest.param("fd4a8cac", False, id="PRODUCT GET Endpoint - Fetch all the products associated with the authenticated business"),
+    ],
 )
 async def test_get_products_internal(
-        test_app: FastAPI,
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        business_id: str,
-        present: bool
+    test_app: FastAPI,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    mocker: MockerFixture,
+    business_id: str,
+    present: bool,
 ) -> None:
     """
     Test the `get` endpoint for fetching all the products associated with the authenticated
@@ -192,9 +169,10 @@ async def test_get_products_internal(
             "exp_date": product.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
             "price": product.price,
             "uuid": product.uuid,
-            "business_id": product.business_id
-        } for product in data.values()
-        if product.business_id == business_id  #uuid of the authenticated business
+            "business_id": product.business_id,
+        }
+        for product in data.values()
+        if product.business_id == business_id  # uuid of the authenticated business
     ]
 
     """
@@ -218,37 +196,39 @@ async def test_get_products_internal(
     """
     if present:
         assert response.status_code == 200
-        assert response.json() == {
-            "action": "get",
-            "products": products
-        }
+        assert response.json() == {"action": "get", "products": products}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "No product present in database"
+
 
 @pytest.mark.parametrize(
     "business_id, product_id, present",
     [
         pytest.param(
-            "d76a11f2", "3250fcbe", True,
-            id="PRODUCT GET Endpoint - Fetch specific product by its UUID which is associated with the authenticated business"
+            "d76a11f2",
+            "3250fcbe",
+            True,
+            id="PRODUCT GET Endpoint - Fetch specific product by its UUID which is associated with the authenticated business",
         ),
         pytest.param(
-            "d76a11f2", "xxxxyyyy", False,
-            id="PRODUCT GET Endpoint - Fail to fetch specific product by its UUID which is associated with the authenticated business"
-        )
-    ]
+            "d76a11f2",
+            "xxxxyyyy",
+            False,
+            id="PRODUCT GET Endpoint - Fail to fetch specific product by its UUID which is associated with the authenticated business",
+        ),
+    ],
 )
 async def test_get_product_by_uuid(
-        test_app: FastAPI,
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        mocker: MockerFixture,
-        business_id: str,
-        product_id: str,
-        present: bool
+    test_app: FastAPI,
+    client: AsyncClient,
+    db_test_create: None,
+    db_test_data: None,
+    apply_security_override: None,
+    mocker: MockerFixture,
+    business_id: str,
+    product_id: str,
+    present: bool,
 ) -> None:
     """
     Test the `get` endpoint for fetching the specific product associated with the authenticated
@@ -271,7 +251,7 @@ async def test_get_product_by_uuid(
     """
     data = _test_data_product()
     for prod in data.values():
-        if prod.business_id == business_id and prod.uuid == product_id:  #uuid of authenticated business; uuid of one of their products
+        if prod.business_id == business_id and prod.uuid == product_id:  # uuid of authenticated business; uuid of one of their products
             product = {
                 "name": prod.name,
                 "description": prod.description,
@@ -280,7 +260,7 @@ async def test_get_product_by_uuid(
                 "exp_date": prod.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "price": prod.price,
                 "uuid": prod.uuid,
-                "business_id": prod.business_id
+                "business_id": prod.business_id,
             }
 
     """
@@ -300,10 +280,7 @@ async def test_get_product_by_uuid(
     """
     if present:
         assert response.status_code == 200
-        assert response.json() == {
-            "action": "get",
-            "product": product
-        }
+        assert response.json() == {"action": "get", "product": product}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "Product not present in database"

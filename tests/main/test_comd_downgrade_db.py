@@ -1,4 +1,3 @@
-
 import pytest
 from alembic import command, config
 from click.testing import CliRunner
@@ -12,16 +11,16 @@ from tests import _alempath
     "cmd, revision, code",
     [
         pytest.param("downgrade-db", "base", 0, id="MAIN Function - DOWNGRADE-DB - Downgrade the database to the base revision"),
-        pytest.param("downgrade-db", "306d801996a6", 0, id="MAIN Function - DOWNGRADE-DB - Downgrade the database to the same revision")
-    ]
+        pytest.param("downgrade-db", "306d801996a6", 0, id="MAIN Function - DOWNGRADE-DB - Downgrade the database to the same revision"),
+    ],
 )
 def test_comd_downgrade_db(
-        runner: CliRunner,
-        db_test_create: None,
-        get_test_database_url: URL,
-        cmd: str,
-        revision: str,
-        code: int,
+    runner: CliRunner,
+    db_test_create: None,
+    get_test_database_url: URL,
+    cmd: str,
+    revision: str,
+    code: int,
 ) -> None:
     """
     Test the functionality cli `downgrade-db` command.

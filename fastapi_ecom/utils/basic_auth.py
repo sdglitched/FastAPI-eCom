@@ -14,6 +14,7 @@ from fastapi_ecom.utils.logging_setup import success, warning
 # This will prompt users for a username and password when accessing secured endpoints.
 security = HTTPBasic(auto_error=False)
 
+
 async def verify_basic_customer_cred(credentials: HTTPBasicCredentials | None = Depends(security), db: AsyncSession = Depends(get_db)) -> Customer:
     """
     Verify customer credentials using HTTP Basic Authentication.
@@ -26,7 +27,7 @@ async def verify_basic_customer_cred(credentials: HTTPBasicCredentials | None = 
 
     :return: The customer object if authentication is successful else returns None.
     """
-    if not credentials:  #pragma: no cover
+    if not credentials:  # pragma: no cover
         return None
 
     query = select(Customer).where(Customer.email == credentials.username).options(selectinload("*"))
@@ -36,12 +37,13 @@ async def verify_basic_customer_cred(credentials: HTTPBasicCredentials | None = 
     if not customer_by_email:
         warning(f"No customer account found for email: {credentials.username}")
         return None
-    elif not bcrypt.checkpw(credentials.password.encode('utf-8'), customer_by_email.password.encode('utf-8')):
+    elif not bcrypt.checkpw(credentials.password.encode("utf-8"), customer_by_email.password.encode("utf-8")):
         warning(f"Invalid password for customer: {credentials.username}")
         return None
     else:
         success(f"Customer authenticated via basic auth: {credentials.username}")
         return customer_by_email
+
 
 async def verify_basic_business_cred(credentials: HTTPBasicCredentials | None = Depends(security), db: AsyncSession = Depends(get_db)) -> Business:
     """
@@ -55,7 +57,7 @@ async def verify_basic_business_cred(credentials: HTTPBasicCredentials | None = 
 
     :return: The business object if authentication is successful else returns None.
     """
-    if not credentials:  #pragma: no cover
+    if not credentials:  # pragma: no cover
         return None
 
     query = select(Business).where(Business.email == credentials.username).options(selectinload("*"))
@@ -65,7 +67,7 @@ async def verify_basic_business_cred(credentials: HTTPBasicCredentials | None = 
     if not business_by_email:
         warning(f"No business account found for email: {credentials.username}")
         return None
-    elif not bcrypt.checkpw(credentials.password.encode('utf-8'), business_by_email.password.encode('utf-8')):
+    elif not bcrypt.checkpw(credentials.password.encode("utf-8"), business_by_email.password.encode("utf-8")):
         warning(f"Invalid password for business: {credentials.username}")
         return None
     else:

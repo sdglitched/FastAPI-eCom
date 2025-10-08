@@ -14,6 +14,7 @@ class OrderBase(BaseModel):
     """
     Base model for order-related schemas, providing shared configurations.
     """
+
     class Config:
         """
         This class enables attribute mapping from database model instances to Pydantic models
@@ -23,6 +24,7 @@ class OrderBase(BaseModel):
                                input data directly (i.e., allow assigning to the model attributes
                                directly without validation).
         """
+
         from_attributes = True
 
 
@@ -33,6 +35,7 @@ class OrderCreate(OrderBase):
     :ivar order_date: Date and time when the order was placed.
     :ivar order_items: List of order details, including product information and quantity.
     """
+
     order_date: datetime
     order_items: list[OrderDetailsCreate]
 
@@ -46,6 +49,7 @@ class OrderView(OrderCreate):
     :ivar total_price: Total price of all items in the order.
     :ivar order_items: Detailed information about the items in the order.
     """
+
     uuid: str
     total_price: float
     order_items: list[OrderDetailsView]
@@ -60,6 +64,7 @@ class OrderViewInternal(OrderView):
     :ivar order_items: Detailed information about the items in the order, including internal
                        identifiers.
     """
+
     user_id: str
     order_items: list[OrderDetailsViewInternal]
 
@@ -74,6 +79,7 @@ class OrderResult(APIResult):
 
     :ivar order: Contains detailed information about a single order.
     """
+
     order: OrderView
 
 
@@ -83,6 +89,7 @@ class OrderResultInternal(APIResult):
 
     :ivar order: Contains detailed information about a single order, including internal details.
     """
+
     order: OrderViewInternal
 
 
@@ -92,6 +99,7 @@ class OrderManyResult(APIResult):
 
     :ivar orders: List of orders with detailed information.
     """
+
     orders: list[OrderView] = []
 
 
@@ -101,4 +109,5 @@ class OrderManyResultInternal(APIResult):
 
     :ivar orders: List of orders with detailed internal information.
     """
+
     orders: list[OrderViewInternal] = []

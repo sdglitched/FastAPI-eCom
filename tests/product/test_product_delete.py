@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 
@@ -8,24 +7,14 @@ from tests.product import _test_data_product
 @pytest.mark.parametrize(
     "business_id, product_id, present",
     [
+        pytest.param("5c1c48fb", "d5cf6983", True, id="PRODUCT DELETE Endpoint - Deletes the specific product of currently authenticated business"),
         pytest.param(
-            "5c1c48fb", "d5cf6983", True,
-            id="PRODUCT DELETE Endpoint - Deletes the specific product of currently authenticated business"
+            "5c1c48fb", "d76a11f2", False, id="PRODUCT DELETE Endpoint - Fails to find the specific product of currently authenticated business"
         ),
-        pytest.param(
-            "5c1c48fb", "d76a11f2", False,
-            id="PRODUCT DELETE Endpoint - Fails to find the specific product of currently authenticated business"
-        ),
-    ]
+    ],
 )
 async def test_delete_product(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        business_id: str,
-        product_id: str,
-        present: bool
+    client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, business_id: str, product_id: str, present: bool
 ) -> None:
     """
     Test the `delete` endpoint for deleting the specific product associated with the authenticated
@@ -47,7 +36,7 @@ async def test_delete_product(
     data = _test_data_product()
     product = {}
     for prod in data.values():
-        if prod.business_id == business_id and prod.uuid == product_id:  #uuid of authenticated business; uuid of one of their products
+        if prod.business_id == business_id and prod.uuid == product_id:  # uuid of authenticated business; uuid of one of their products
             product = {
                 "name": prod.name,
                 "description": prod.description,
@@ -56,7 +45,7 @@ async def test_delete_product(
                 "exp_date": prod.exp_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "price": prod.price,
                 "uuid": prod.uuid,
-                "business_id": prod.business_id
+                "business_id": prod.business_id,
             }
 
     """
@@ -69,10 +58,7 @@ async def test_delete_product(
     """
     if present:
         assert response.status_code == 202
-        assert response.json() == {
-            "action": "delete",
-            "product": product
-        }
+        assert response.json() == {"action": "delete", "product": product}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "Product not present in database"

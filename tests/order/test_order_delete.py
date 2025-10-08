@@ -1,4 +1,3 @@
-
 import pytest
 from httpx import AsyncClient
 
@@ -9,16 +8,11 @@ from tests.order import _test_data_order_details, _test_data_orders
     "order_id, present",
     [
         pytest.param("375339b1", True, id="ORDER DELETE Endpoint - Delete a specified order of the authenticated customer"),
-        pytest.param("xxxx1111", False, id="ORDER DELETE Endpoint - Fail to delete a specified order of the authenticated customer")
-    ]
+        pytest.param("xxxx1111", False, id="ORDER DELETE Endpoint - Fail to delete a specified order of the authenticated customer"),
+    ],
 )
 async def test_delete_order(
-        client: AsyncClient,
-        db_test_create: None,
-        db_test_data: None,
-        apply_security_override: None,
-        order_id: str,
-        present: str
+    client: AsyncClient, db_test_create: None, db_test_data: None, apply_security_override: None, order_id: str, present: str
 ) -> None:
     """
     Test the `delete` endpoint for deleting a specified order of the Order API.
@@ -40,11 +34,8 @@ async def test_delete_order(
     for ord in ords.values():
         if ord.uuid == order_id:
             order_items = [
-                {
-                    "product_id": detail.product_id,
-                    "quantity": detail.quantity,
-                    "price": detail.price
-                } for detail in order_details.values()
+                {"product_id": detail.product_id, "quantity": detail.quantity, "price": detail.price}
+                for detail in order_details.values()
                 if detail.order_id == ord.uuid
             ]
             total_price = sum(item["quantity"] * item["price"] for item in order_items)
@@ -52,7 +43,7 @@ async def test_delete_order(
                 "uuid": ord.uuid,
                 "order_date": ord.order_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None).isoformat(),
                 "total_price": total_price,
-                "order_items": order_items
+                "order_items": order_items,
             }
 
     """
@@ -65,10 +56,7 @@ async def test_delete_order(
     """
     if present:
         assert response.status_code == 202
-        assert response.json() == {
-            "action": "delete",
-            "order": order
-        }
+        assert response.json() == {"action": "delete", "order": order}
     else:
         assert response.status_code == 404
         assert response.json()["detail"] == "Order not present in database"

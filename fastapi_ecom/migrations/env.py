@@ -8,7 +8,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from fastapi_ecom.database import baseobjc
-from fastapi_ecom.database.models import (  #noqa: F401
+from fastapi_ecom.database.models import (  # noqa: F401
     business,
     customer,
     order,
@@ -83,6 +83,7 @@ def run_migrations_offline() -> None:
 #             context.run_migrations()
 
 # Single database connection with async db. Ref. https://github.com/sqlalchemy/alembic/blob/main/alembic/templates/async/env.py
+
 
 def do_run_migrations(connection):
     context.configure(connection=connection, target_metadata=target_metadata)
