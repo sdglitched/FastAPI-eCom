@@ -22,7 +22,7 @@ itsdangerous = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.14.0"
-pytest = "^8.3.3"
+pytest = "^9.0.0"
 tox = "^4.23.2"
 pytest-cov = "^7.0.0"
 coverage = "^7.6.8"
