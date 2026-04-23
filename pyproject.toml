@@ -9,7 +9,7 @@ packages = [{include = "fastapi_ecom"}]
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.135.0"
-uvicorn = "^0.44.0"
+uvicorn = "^0.46.0"
 sqlalchemy = "^2.0.31"
 alembic = "^1.13.2"
 bcrypt = "^5.0.0"
